@@ -1,0 +1,523 @@
+<div class="trab">
+  <!-- ===================== Listado ===================== -->
+  <section class="card">
+    <header class="card__head">
+      <h2>Listado de trabajadores</h2>
+
+      <div class="filtros">
+        <div class="field-search">
+          <i class="pi pi-search"></i>
+          <input
+            type="text"
+            placeholder="Buscar por nombre, documento o ruta…"
+            [(ngModel)]="search"
+            (keyup.enter)="buscar()"
+          />
+        </div>
+
+        <label class="select">
+          <span>Estado</span>
+          <select
+            [(ngModel)]="filtroEstado"
+            (ngModelChange)="cambiarFiltroEstado($event)"
+          >
+            <option value="">Todos</option>
+            <option value="ACTIVO">Activos</option>
+            <option value="INACTIVO">Inactivos</option>
+          </select>
+        </label>
+
+        <button type="button" class="btn btn--ghost" (click)="limpiarFiltros()">
+          <i class="pi pi-filter-slash"></i> Limpiar filtros
+        </button>
+      </div>
+    </header>
+
+    <div class="card__body">
+      <table class="table">
+        <thead>
+          <tr>
+            <th class="col-num">#</th>
+            <th>Trabajador</th>
+            <th>Documento</th>
+            <th>Teléfono</th>
+            <th>Ruta asignada</th>
+            <th>Clientes</th>
+            <th>Recaudo de hoy</th>
+            <th>Estado</th>
+            <th class="col-acciones">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          @if (loading()) {
+            <tr>
+              <td colspan="9" class="estado-fila">
+                <i class="pi pi-spin pi-spinner"></i> Cargando…
+              </td>
+            </tr>
+          } @else if (rows().length === 0) {
+            <tr>
+              <td colspan="9" class="estado-fila">
+                No hay trabajadores registrados.
+              </td>
+            </tr>
+          } @else {
+            @for (t of rows(); track t.id; let i = $index) {
+              <tr
+                [class.is-selected]="seleccionado()?.id === t.id"
+                (click)="seleccionar(t)"
+              >
+                <td class="col-num muted">{{ page() * tamano + i + 1 }}</td>
+                <td>
+                  <div class="persona">
+                    <span class="avatar avatar--sm">{{ iniciales(t.nombre) }}</span>
+                    <div class="persona__info">
+                      <strong>{{ t.nombre }}</strong>
+                      <span>Cobrador</span>
+                    </div>
+                  </div>
+                </td>
+                <td class="num">{{ t.documento }}</td>
+                <td class="muted">{{ t.telefono || '—' }}</td>
+                <td>
+                  @if (t.ruta_asignada) {
+                    <span class="ruta-tag">{{ t.ruta_asignada }}</span>
+                  } @else {
+                    <span class="muted">Sin asignar</span>
+                  }
+                </td>
+                <td class="num">{{ t.clientes }}</td>
+                <td class="num">{{ moneda(t.recaudo_hoy) }}</td>
+                <td>
+                  <span
+                    class="badge"
+                    [class.badge--ok]="t.estado === 'ACTIVO'"
+                    [class.badge--off]="t.estado !== 'ACTIVO'"
+                  >
+                    {{ t.estado }}
+                  </span>
+                </td>
+                <td>
+                  <div class="acciones">
+                    <button
+                      type="button"
+                      class="icon-btn"
+                      title="Editar"
+                      (click)="editar(t); $event.stopPropagation()"
+                    >
+                      <i class="pi pi-pencil"></i>
+                    </button>
+                    <button
+                      type="button"
+                      class="icon-btn"
+                      title="Configurar límites"
+                      (click)="editar(t, 'limites'); $event.stopPropagation()"
+                    >
+                      <i class="pi pi-sliders-h"></i>
+                    </button>
+                    <button
+                      type="button"
+                      class="icon-btn"
+                      [title]="t.estado === 'ACTIVO' ? 'Inactivar' : 'Activar'"
+                      (click)="toggleEstado(t); $event.stopPropagation()"
+                    >
+                      <i
+                        class="pi"
+                        [class.pi-ban]="t.estado === 'ACTIVO'"
+                        [class.pi-check-circle]="t.estado !== 'ACTIVO'"
+                      ></i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <footer class="paginador">
+      <span class="paginador__info">
+        Mostrando {{ rows().length }} de {{ totalElements() }} trabajadores
+      </span>
+      <div class="paginador__nav">
+        <button
+          type="button"
+          class="icon-btn"
+          [disabled]="page() === 0"
+          (click)="irPagina(page() - 1)"
+        >
+          <i class="pi pi-chevron-left"></i>
+        </button>
+        <span class="paginador__page">{{ page() + 1 }}</span>
+        <button
+          type="button"
+          class="icon-btn"
+          [disabled]="page() + 1 >= totalPages()"
+          (click)="irPagina(page() + 1)"
+        >
+          <i class="pi pi-chevron-right"></i>
+        </button>
+      </div>
+    </footer>
+  </section>
+
+  <!-- ===================== Cards de detalle ===================== -->
+  <section class="cards">
+    <!-- Detalle del trabajador -->
+    <article class="card panel">
+      <header class="panel__head">
+        <h3>Detalle del trabajador</h3>
+      </header>
+      @if (seleccionado(); as t) {
+        <div class="panel__body">
+          <div class="persona persona--lg">
+            <span class="avatar avatar--lg">{{ iniciales(t.nombre) }}</span>
+            <div class="persona__info">
+              <strong>{{ t.nombre }}</strong>
+              <span>Cobrador</span>
+            </div>
+            <span
+              class="badge"
+              [class.badge--ok]="t.estado === 'ACTIVO'"
+              [class.badge--off]="t.estado !== 'ACTIVO'"
+            >
+              {{ t.estado }}
+            </span>
+          </div>
+
+          <ul class="datos">
+            <li>
+              <i class="pi pi-id-card"></i>
+              <span>Documento</span>
+              <strong>{{ t.documento }}</strong>
+            </li>
+            <li>
+              <i class="pi pi-phone"></i>
+              <span>Teléfono</span>
+              <strong>{{ t.telefono || '—' }}</strong>
+            </li>
+            <li>
+              <i class="pi pi-envelope"></i>
+              <span>Correo</span>
+              <strong>{{ t.usuario_correo || '—' }}</strong>
+            </li>
+            <li>
+              <i class="pi pi-calendar"></i>
+              <span>Fecha de ingreso</span>
+              <strong>{{ t.fecha_ingreso || '—' }}</strong>
+            </li>
+            <li>
+              <i class="pi pi-map-marker"></i>
+              <span>Ruta actual</span>
+              <strong>{{ t.ruta_asignada || 'Sin asignar' }}</strong>
+            </li>
+            <li>
+              <i class="pi pi-home"></i>
+              <span>Dirección</span>
+              <strong>{{ t.direccion || '—' }}</strong>
+            </li>
+          </ul>
+        </div>
+      } @else {
+        <div class="panel__vacio">
+          <i class="pi pi-user"></i>
+          <p>Selecciona un trabajador para ver su detalle.</p>
+        </div>
+      }
+    </article>
+
+    <!-- Rendimiento del día -->
+    <article class="card panel">
+      <header class="panel__head">
+        <h3>Rendimiento del día</h3>
+      </header>
+      @if (seleccionado(); as t) {
+        <div class="panel__body">
+          <div class="mini-stats">
+            <div class="mini-stat">
+              <span>Clientes asignados</span>
+              <strong>{{ t.clientes }}</strong>
+            </div>
+            <div class="mini-stat">
+              <span>Recaudo de hoy</span>
+              <strong>{{ moneda(t.recaudo_hoy) }}</strong>
+            </div>
+          </div>
+
+          <div class="tendencia">
+            <span class="tendencia__label">Tendencia de recaudo</span>
+            <svg viewBox="0 0 220 64" preserveAspectRatio="none" class="tendencia__chart">
+              <polyline
+                points="4,52 36,40 68,46 100,28 132,34 164,18 196,24 216,10"
+                fill="none"
+                stroke="#0b53d7"
+                stroke-width="2.5"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+          </div>
+        </div>
+      } @else {
+        <div class="panel__vacio">
+          <i class="pi pi-chart-line"></i>
+          <p>Selecciona un trabajador para ver su rendimiento.</p>
+        </div>
+      }
+    </article>
+
+    <!-- Permisos y límites -->
+    <article class="card panel">
+      <header class="panel__head">
+        <h3>Permisos y límites</h3>
+      </header>
+      @if (seleccionado()) {
+        <div class="panel__body">
+          @if (limiteSeleccionado(); as l) {
+            <ul class="limites">
+              <li>
+                <i class="pi pi-dollar"></i>
+                <span>Monto máximo por préstamo</span>
+                <strong>{{ moneda(l.montoMaximoPrestamo) }}</strong>
+              </li>
+              <li>
+                <i class="pi pi-percentage"></i>
+                <span>Tasa mínima</span>
+                <strong>{{ l.tasaMinima }}%</strong>
+              </li>
+              <li>
+                <i class="pi pi-percentage"></i>
+                <span>Tasa máxima</span>
+                <strong>{{ l.tasaMaxima }}%</strong>
+              </li>
+              <li>
+                <i class="pi pi-calendar"></i>
+                <span>Plazo máximo</span>
+                <strong>{{ l.plazoMaximoDias }} días</strong>
+              </li>
+            </ul>
+            <ul class="permisos">
+              <li>
+                <span>Puede crear cliente</span>
+                <em [class.si]="l.puedeCrearCliente" [class.no]="!l.puedeCrearCliente">
+                  <i class="pi" [class.pi-check-circle]="l.puedeCrearCliente" [class.pi-times-circle]="!l.puedeCrearCliente"></i>
+                  {{ l.puedeCrearCliente ? 'Sí' : 'No' }}
+                </em>
+              </li>
+              <li>
+                <span>Puede crear préstamo</span>
+                <em [class.si]="l.puedeCrearPrestamo" [class.no]="!l.puedeCrearPrestamo">
+                  <i class="pi" [class.pi-check-circle]="l.puedeCrearPrestamo" [class.pi-times-circle]="!l.puedeCrearPrestamo"></i>
+                  {{ l.puedeCrearPrestamo ? 'Sí' : 'No' }}
+                </em>
+              </li>
+              <li>
+                <span>Puede definir tasa</span>
+                <em [class.si]="l.puedeDefinirTasa" [class.no]="!l.puedeDefinirTasa">
+                  <i class="pi" [class.pi-check-circle]="l.puedeDefinirTasa" [class.pi-times-circle]="!l.puedeDefinirTasa"></i>
+                  {{ l.puedeDefinirTasa ? 'Sí' : 'No' }}
+                </em>
+              </li>
+            </ul>
+          } @else if (limiteCargando()) {
+            <p class="limites-vacio"><i class="pi pi-spin pi-spinner"></i> Cargando…</p>
+          } @else {
+            <p class="limites-vacio">Este trabajador aún no tiene límites configurados.</p>
+          }
+
+          <button type="button" class="btn btn--outline" (click)="configurarLimites()">
+            <i class="pi pi-shield"></i> Configurar límites
+          </button>
+        </div>
+      } @else {
+        <div class="panel__vacio">
+          <i class="pi pi-sliders-h"></i>
+          <p>Selecciona un trabajador para ver sus permisos.</p>
+        </div>
+      }
+    </article>
+  </section>
+</div>
+
+<!-- ===================== Diálogo crear / editar ===================== -->
+<p-dialog
+  [visible]="dialogVisible()"
+  (visibleChange)="dialogVisible.set($event)"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: '560px' }"
+  [header]="tituloDialogo()"
+>
+  <div class="tabs">
+    <button
+      type="button"
+      class="tabs__item"
+      [class.is-active]="pestana() === 'general'"
+      (click)="pestana.set('general')"
+    >
+      Información General
+    </button>
+    <button
+      type="button"
+      class="tabs__item"
+      [class.is-active]="pestana() === 'limites'"
+      (click)="pestana.set('limites')"
+    >
+      Límites del Trabajador
+    </button>
+  </div>
+
+  <!-- Tab: Información General -->
+  <form
+    class="form"
+    [class.oculto]="pestana() !== 'general'"
+    [formGroup]="formGeneral"
+  >
+    <div class="form__field">
+      <label>Nombre completo *</label>
+      <input
+        type="text"
+        formControlName="nombre"
+        [class.is-invalid]="campoInvalido(formGeneral, 'nombre')"
+      />
+      @if (campoInvalido(formGeneral, 'nombre')) {
+        <small class="form__error">El nombre es obligatorio.</small>
+      }
+    </div>
+
+    <div class="form__row">
+      <div class="form__field">
+        <label>Documento *</label>
+        <input
+          type="text"
+          formControlName="documento"
+          [class.is-invalid]="campoInvalido(formGeneral, 'documento')"
+        />
+        @if (campoInvalido(formGeneral, 'documento')) {
+          <small class="form__error">El documento es obligatorio.</small>
+        }
+      </div>
+      <div class="form__field">
+        <label>Teléfono</label>
+        <input type="text" formControlName="telefono" />
+      </div>
+    </div>
+
+    <div class="form__field">
+      <label>Dirección</label>
+      <input type="text" formControlName="direccion" />
+    </div>
+
+    <label class="switch">
+      <input type="checkbox" formControlName="activo" />
+      <span>Trabajador activo</span>
+    </label>
+
+    <!-- Acceso al sistema -->
+    <div class="form__seccion">
+      <div class="form__seccion-head">
+        <i class="pi pi-key"></i>
+        <div>
+          <strong>Acceso al sistema</strong>
+          <small>
+            @if (tieneUsuario()) {
+              Este trabajador ya tiene acceso. La contraseña solo cambia si la diligencias.
+            } @else {
+              Opcional. Diligéncialo para que el trabajador pueda iniciar sesión.
+            }
+          </small>
+        </div>
+      </div>
+
+      <div class="form__field">
+        <label>Correo electrónico</label>
+        <input
+          type="email"
+          formControlName="correo"
+          placeholder="trabajador@empresa.com"
+          [class.is-invalid]="campoInvalido(formGeneral, 'correo')"
+        />
+        @if (campoInvalido(formGeneral, 'correo')) {
+          <small class="form__error">El correo no tiene un formato válido.</small>
+        }
+      </div>
+
+      <div class="form__row">
+        <div class="form__field">
+          <label>Usuario del sistema</label>
+          <input type="text" formControlName="usuario" placeholder="nombre.usuario" />
+        </div>
+        <div class="form__field">
+          <label>{{ tieneUsuario() ? 'Nueva contraseña' : 'Contraseña' }}</label>
+          <input
+            type="password"
+            formControlName="password"
+            [placeholder]="tieneUsuario() ? 'Dejar vacío para no cambiar' : '••••••••'"
+          />
+        </div>
+      </div>
+    </div>
+  </form>
+
+  <!-- Tab: Límites -->
+  <form
+    class="form"
+    [class.oculto]="pestana() !== 'limites'"
+    [formGroup]="formLimite"
+  >
+    <div class="form__field">
+      <label>Monto máximo por préstamo *</label>
+      <input type="number" min="0" formControlName="montoMaximoPrestamo" />
+    </div>
+
+    <div class="form__row">
+      <div class="form__field">
+        <label>Tasa mínima (%) *</label>
+        <input type="number" min="0" step="0.01" formControlName="tasaMinima" />
+      </div>
+      <div class="form__field">
+        <label>Tasa máxima (%) *</label>
+        <input type="number" min="0" step="0.01" formControlName="tasaMaxima" />
+      </div>
+    </div>
+
+    <div class="form__field">
+      <label>Plazo máximo (días) *</label>
+      <input type="number" min="0" formControlName="plazoMaximoDias" />
+    </div>
+
+    <div class="form__permisos">
+      <label class="switch">
+        <input type="checkbox" formControlName="puedeCrearCliente" />
+        <span>Puede crear clientes</span>
+      </label>
+      <label class="switch">
+        <input type="checkbox" formControlName="puedeCrearPrestamo" />
+        <span>Puede crear préstamos</span>
+      </label>
+      <label class="switch">
+        <input type="checkbox" formControlName="puedeDefinirTasa" />
+        <span>Puede definir la tasa</span>
+      </label>
+    </div>
+  </form>
+
+  <div class="form__actions">
+    <button type="button" class="btn btn--ghost" (click)="dialogVisible.set(false)">
+      Cancelar
+    </button>
+    <button
+      type="button"
+      class="btn btn--primary"
+      [disabled]="guardando()"
+      (click)="guardar()"
+    >
+      @if (guardando()) {
+        <i class="pi pi-spin pi-spinner"></i>
+      }
+      Guardar
+    </button>
+  </div>
+</p-dialog>

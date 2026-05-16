@@ -1,0 +1,297 @@
+<div class="clientes">
+  <!-- ===================== Listado ===================== -->
+  <section class="card">
+    <header class="card__head">
+      <h2>Listado de clientes</h2>
+
+      <div class="filtros">
+        <div class="field-search">
+          <i class="pi pi-search"></i>
+          <input
+            type="text"
+            placeholder="Buscar por nombre, documento o teléfono…"
+            [(ngModel)]="search"
+            (keyup.enter)="buscar()"
+          />
+        </div>
+
+        <label class="select">
+          <span>Ruta</span>
+          <select [(ngModel)]="filtroRuta" (ngModelChange)="aplicarFiltro()">
+            <option value="">Todas</option>
+            @for (r of rutas(); track r.id) {
+              <option [value]="r.id">{{ r.nombre }}</option>
+            }
+          </select>
+        </label>
+
+        <label class="select">
+          <span>Estado</span>
+          <select [(ngModel)]="filtroEstado" (ngModelChange)="aplicarFiltro()">
+            <option value="">Todos</option>
+            <option value="ACTIVO">Activos</option>
+            <option value="BLOQUEADO">Bloqueados</option>
+            <option value="RETIRADO">Retirados</option>
+            <option value="EN_MORA">En mora</option>
+          </select>
+        </label>
+
+        <button type="button" class="btn btn--ghost" (click)="limpiarFiltros()">
+          <i class="pi pi-filter-slash"></i> Limpiar filtros
+        </button>
+      </div>
+    </header>
+
+    <div class="card__body">
+      <table class="table">
+        <thead>
+          <tr>
+            <th class="col-num">#</th>
+            <th>Cliente</th>
+            <th>Documento</th>
+            <th>Teléfono</th>
+            <th>Barrio</th>
+            <th>Ruta</th>
+            <th>Estado</th>
+            <th class="col-acciones">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          @if (loading()) {
+            <tr>
+              <td colspan="8" class="estado-fila">
+                <i class="pi pi-spin pi-spinner"></i> Cargando…
+              </td>
+            </tr>
+          } @else if (rows().length === 0) {
+            <tr>
+              <td colspan="8" class="estado-fila">No hay clientes registrados.</td>
+            </tr>
+          } @else {
+            @for (c of rows(); track c.id; let i = $index) {
+              <tr
+                [class.is-selected]="seleccionado()?.id === c.id"
+                (click)="seleccionar(c)"
+              >
+                <td class="col-num muted">{{ page() * tamano + i + 1 }}</td>
+                <td>
+                  <div class="persona">
+                    <span class="avatar avatar--sm">{{ iniciales(c.nombre) }}</span>
+                    <strong>{{ c.nombre }}</strong>
+                  </div>
+                </td>
+                <td class="num">{{ c.documento || '—' }}</td>
+                <td class="muted">{{ c.telefono || '—' }}</td>
+                <td class="muted">{{ c.barrio || '—' }}</td>
+                <td>
+                  @if (c.ruta) {
+                    <span class="ruta-tag">{{ c.ruta }}</span>
+                  } @else {
+                    <span class="muted">Sin ruta</span>
+                  }
+                </td>
+                <td>
+                  <span class="badge" [class]="'badge--' + c.estado.toLowerCase()">
+                    {{ c.estado }}
+                  </span>
+                </td>
+                <td>
+                  <div class="acciones">
+                    <button
+                      type="button"
+                      class="icon-btn"
+                      title="Editar"
+                      (click)="editar(c); $event.stopPropagation()"
+                    >
+                      <i class="pi pi-pencil"></i>
+                    </button>
+                    @if (c.estado === 'ACTIVO') {
+                      <button
+                        type="button"
+                        class="icon-btn"
+                        title="Bloquear"
+                        (click)="cambiarEstado(c, 'BLOQUEADO'); $event.stopPropagation()"
+                      >
+                        <i class="pi pi-ban"></i>
+                      </button>
+                    } @else {
+                      <button
+                        type="button"
+                        class="icon-btn"
+                        title="Activar"
+                        (click)="cambiarEstado(c, 'ACTIVO'); $event.stopPropagation()"
+                      >
+                        <i class="pi pi-check-circle"></i>
+                      </button>
+                    }
+                  </div>
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <footer class="paginador">
+      <span class="paginador__info">
+        Mostrando {{ rows().length }} de {{ totalElements() }} clientes
+      </span>
+      <div class="paginador__nav">
+        <button
+          type="button"
+          class="icon-btn"
+          [disabled]="page() === 0"
+          (click)="irPagina(page() - 1)"
+        >
+          <i class="pi pi-chevron-left"></i>
+        </button>
+        <span class="paginador__page">{{ page() + 1 }}</span>
+        <button
+          type="button"
+          class="icon-btn"
+          [disabled]="page() + 1 >= totalPages()"
+          (click)="irPagina(page() + 1)"
+        >
+          <i class="pi pi-chevron-right"></i>
+        </button>
+      </div>
+    </footer>
+  </section>
+
+  <!-- ===================== Detalle del cliente ===================== -->
+  <section class="card panel">
+    <header class="panel__head">
+      <h3>Detalle del cliente</h3>
+    </header>
+    @if (seleccionado(); as c) {
+      <div class="panel__body">
+        <div class="persona persona--lg">
+          <span class="avatar avatar--lg">{{ iniciales(c.nombre) }}</span>
+          <div class="persona__info">
+            <strong>{{ c.nombre }}</strong>
+            <span>Cliente · registrado {{ c.fecha_registro || '—' }}</span>
+          </div>
+          <span class="badge" [class]="'badge--' + c.estado.toLowerCase()">
+            {{ c.estado }}
+          </span>
+        </div>
+
+        <ul class="datos">
+          <li>
+            <i class="pi pi-id-card"></i>
+            <span>Documento</span>
+            <strong>{{ c.documento || '—' }}</strong>
+          </li>
+          <li>
+            <i class="pi pi-phone"></i>
+            <span>Teléfono</span>
+            <strong>{{ c.telefono || '—' }}</strong>
+          </li>
+          <li>
+            <i class="pi pi-home"></i>
+            <span>Dirección</span>
+            <strong>{{ c.direccion || '—' }}</strong>
+          </li>
+          <li>
+            <i class="pi pi-map"></i>
+            <span>Barrio</span>
+            <strong>{{ c.barrio || '—' }}</strong>
+          </li>
+          <li>
+            <i class="pi pi-map-marker"></i>
+            <span>Ruta</span>
+            <strong>{{ c.ruta || 'Sin ruta' }}</strong>
+          </li>
+        </ul>
+      </div>
+    } @else {
+      <div class="panel__vacio">
+        <i class="pi pi-users"></i>
+        <p>Selecciona un cliente para ver su detalle.</p>
+      </div>
+    }
+  </section>
+</div>
+
+<!-- ===================== Diálogo crear / editar ===================== -->
+<p-dialog
+  [visible]="dialogVisible()"
+  (visibleChange)="dialogVisible.set($event)"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: '540px' }"
+  [header]="tituloDialogo()"
+>
+  <form class="form" [formGroup]="formCliente">
+    <div class="form__field">
+      <label>Nombre completo *</label>
+      <input
+        type="text"
+        formControlName="nombre"
+        [class.is-invalid]="campoInvalido('nombre')"
+      />
+      @if (campoInvalido('nombre')) {
+        <small class="form__error">El nombre es obligatorio.</small>
+      }
+    </div>
+
+    <div class="form__row">
+      <div class="form__field">
+        <label>Documento</label>
+        <input type="text" formControlName="documento" />
+      </div>
+      <div class="form__field">
+        <label>Teléfono</label>
+        <input type="text" formControlName="telefono" />
+      </div>
+    </div>
+
+    <div class="form__row">
+      <div class="form__field">
+        <label>Dirección</label>
+        <input type="text" formControlName="direccion" />
+      </div>
+      <div class="form__field">
+        <label>Barrio</label>
+        <input type="text" formControlName="barrio" />
+      </div>
+    </div>
+
+    <div class="form__field">
+      <label>Estado</label>
+      <select formControlName="estado">
+        @for (e of estados; track e) {
+          <option [value]="e">{{ e }}</option>
+        }
+      </select>
+    </div>
+
+    <div class="form__field">
+      <label>Observación</label>
+      <textarea
+        rows="3"
+        formControlName="observacion"
+        placeholder="Notas o referencias del cliente"
+      ></textarea>
+    </div>
+  </form>
+
+  <div class="form__actions">
+    <button type="button" class="btn btn--ghost" (click)="dialogVisible.set(false)">
+      Cancelar
+    </button>
+    <button
+      type="button"
+      class="btn btn--primary"
+      [disabled]="guardando()"
+      (click)="guardar()"
+    >
+      @if (guardando()) {
+        <i class="pi pi-spin pi-spinner"></i>
+      }
+      Guardar
+    </button>
+  </div>
+</p-dialog>

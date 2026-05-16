@@ -1,0 +1,448 @@
+// ===== Paleta tomada de la imagen de referencia =====
+$blue:        #0b53d7;
+$blue-hover:  #0a47b8;
+$blue-soft:   #eef3fd;
+$ink:         #1e293b;
+$ink-soft:    #334155;
+$muted:       #64748b;
+$muted-2:     #94a3b8;
+$bg:          #fafbfd;
+$border:      #e6e9f0;
+
+:host {
+  display: block;
+  font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  * {
+    box-sizing: border-box;
+  }
+}
+
+.login {
+  display: flex;
+  min-height: 100vh;
+  background: $bg;
+  color: $ink;
+}
+
+/* ============================ Panel izquierdo ============================ */
+.panel {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 2rem;
+  padding: 3.25rem 4rem;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+
+  &__icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 11px;
+    background: $blue;
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.15rem;
+  }
+
+  &__text {
+    display: flex;
+    flex-direction: column;
+    line-height: 1.2;
+  }
+
+  &__name {
+    font-size: 1.35rem;
+    letter-spacing: 0.4px;
+
+    b {
+      color: $ink;
+      font-weight: 800;
+    }
+
+    em {
+      color: $blue;
+      font-weight: 800;
+      font-style: normal;
+      margin-left: 0.32em;
+    }
+  }
+
+  &__sub {
+    font-size: 0.8rem;
+    color: $muted;
+    margin-top: 0.15rem;
+  }
+}
+
+.panel__body {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 2.5rem;
+}
+
+.hero {
+  flex: 0 0 25rem;
+
+  &__title {
+    font-size: 2.5rem;
+    font-weight: 800;
+    line-height: 1.15;
+    color: $ink;
+    margin: 0;
+  }
+
+  &__text {
+    margin: 1rem 0 0;
+    font-size: 0.98rem;
+    line-height: 1.6;
+    color: $muted;
+    max-width: 21rem;
+  }
+}
+
+.art {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+
+  img {
+    width: 100%;
+    max-width: 30rem;
+    height: auto;
+    display: block;
+  }
+}
+
+.features {
+  display: flex;
+  gap: 1.75rem;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.feature {
+  flex: 1;
+  display: flex;
+  gap: 0.8rem;
+  align-items: flex-start;
+
+  &__icon {
+    flex-shrink: 0;
+    width: 38px;
+    height: 38px;
+    border-radius: 10px;
+    background: $blue-soft;
+    color: $blue;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1rem;
+  }
+
+  &__body {
+    h3 {
+      margin: 0;
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: $ink;
+    }
+
+    p {
+      margin: 0.25rem 0 0;
+      font-size: 0.82rem;
+      line-height: 1.5;
+      color: $muted;
+    }
+  }
+}
+
+/* ============================ Tarjeta de login ============================ */
+.form-area {
+  flex: 0 0 41%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 2rem;
+}
+
+.card {
+  width: 100%;
+  max-width: 27rem;
+  background: #fff;
+  border: 1px solid $border;
+  border-radius: 20px;
+  padding: 2.5rem;
+  box-shadow: 0 18px 40px rgba(15, 23, 42, 0.06);
+
+  &__title {
+    margin: 0;
+    text-align: center;
+    font-size: 1.7rem;
+    font-weight: 700;
+    color: $ink;
+  }
+
+  &__subtitle {
+    margin: 0.4rem 0 1.6rem;
+    text-align: center;
+    font-size: 0.9rem;
+    color: $muted;
+  }
+
+  &__foot {
+    margin: 1.3rem 0 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.4rem;
+    font-size: 0.78rem;
+    color: $muted-2;
+  }
+}
+
+.field {
+  margin-bottom: 1.1rem;
+
+  &__label {
+    display: block;
+    margin-bottom: 0.45rem;
+    font-size: 0.85rem;
+    font-weight: 600;
+    color: $ink-soft;
+  }
+
+  &__error {
+    display: block;
+    margin-top: 0.35rem;
+    font-size: 0.76rem;
+    color: #dc2626;
+  }
+}
+
+/* --- Selector de rol --- */
+.rol {
+  display: flex;
+  gap: 0.6rem;
+
+  &__opt {
+    flex: 1;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.5rem;
+    border: 1.5px solid $border;
+    border-radius: 10px;
+    background: #fff;
+    color: $muted;
+    font-size: 0.9rem;
+    font-weight: 600;
+    font-family: inherit;
+    cursor: pointer;
+    transition: all 0.15s ease;
+
+    i {
+      font-size: 0.95rem;
+    }
+
+    &:hover {
+      border-color: #cbd5e1;
+    }
+
+    &.is-active {
+      background: $blue-soft;
+      border-color: $blue;
+      color: $blue;
+    }
+  }
+}
+
+/* --- Inputs con icono --- */
+.control {
+  position: relative;
+  display: flex;
+  align-items: center;
+
+  &__icon {
+    position: absolute;
+    left: 0.95rem;
+    font-size: 0.95rem;
+    color: $muted-2;
+    pointer-events: none;
+  }
+
+  &__input {
+    width: 100%;
+    height: 46px;
+    border: 1.5px solid $border;
+    border-radius: 10px;
+    padding: 0 1rem 0 2.6rem;
+    font-size: 0.92rem;
+    font-family: inherit;
+    color: $ink;
+    background: #fff;
+    outline: none;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+
+    &::placeholder {
+      color: $muted-2;
+    }
+
+    &:focus {
+      border-color: $blue;
+      box-shadow: 0 0 0 3px rgba(11, 83, 215, 0.12);
+    }
+
+    &--trailing {
+      padding-right: 2.8rem;
+    }
+  }
+
+  &__toggle {
+    position: absolute;
+    right: 0.5rem;
+    width: 2rem;
+    height: 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border: 0;
+    border-radius: 6px;
+    background: transparent;
+    color: $muted-2;
+    cursor: pointer;
+
+    &:hover {
+      color: $muted;
+    }
+  }
+
+  &.is-error .control__input {
+    border-color: #dc2626;
+  }
+}
+
+/* --- Fila recordarme / olvido --- */
+.row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin: 0.35rem 0 1.3rem;
+}
+
+.check {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  user-select: none;
+
+  input {
+    position: absolute;
+    opacity: 0;
+    width: 0;
+    height: 0;
+  }
+
+  &__box {
+    width: 18px;
+    height: 18px;
+    border: 1.5px solid $border;
+    border-radius: 5px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #fff;
+    font-size: 0.62rem;
+    transition: all 0.15s ease;
+
+    i {
+      opacity: 0;
+    }
+  }
+
+  input:checked + &__box {
+    background: $blue;
+    border-color: $blue;
+
+    i {
+      opacity: 1;
+    }
+  }
+
+  &__label {
+    font-size: 0.85rem;
+    color: $muted;
+  }
+}
+
+.link {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: $blue;
+  text-decoration: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+/* --- Botón ingresar --- */
+.submit {
+  width: 100%;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  border: 0;
+  border-radius: 10px;
+  background: $blue;
+  color: #fff;
+  font-size: 0.95rem;
+  font-weight: 700;
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 0.15s ease;
+
+  &:hover:not(:disabled) {
+    background: $blue-hover;
+  }
+
+  &:disabled {
+    opacity: 0.7;
+    cursor: not-allowed;
+  }
+}
+
+/* ============================ Responsive ============================ */
+@media (max-width: 1100px) {
+  .panel {
+    padding: 2.5rem;
+  }
+
+  .hero__title {
+    font-size: 2.1rem;
+  }
+}
+
+@media (max-width: 900px) {
+  .panel {
+    display: none;
+  }
+
+  .form-area {
+    flex: 1 1 auto;
+  }
+}

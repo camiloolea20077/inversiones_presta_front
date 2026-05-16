@@ -1,0 +1,146 @@
+:host {
+  flex-shrink: 0;
+  width: 256px;
+}
+
+.sidebar {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  width: 256px;
+  display: flex;
+  flex-direction: column;
+  background: #fff;
+  border-right: 1px solid var(--cd-border);
+
+  &__brand {
+    display: flex;
+    align-items: center;
+    gap: 0.65rem;
+    padding: 1.35rem 1.25rem;
+  }
+
+  &__logo {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    background: var(--cd-blue);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.05rem;
+  }
+
+  &__name {
+    font-size: 1.02rem;
+    letter-spacing: 0.3px;
+
+    b {
+      color: var(--cd-ink);
+      font-weight: 800;
+    }
+
+    em {
+      color: var(--cd-blue);
+      font-weight: 800;
+      font-style: normal;
+      margin-left: 0.28em;
+    }
+  }
+
+  &__sub {
+    display: block;
+    font-size: 0.72rem;
+    color: var(--cd-muted);
+    margin-top: 0.1rem;
+  }
+
+  &__nav {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 0.15rem;
+    padding: 0.5rem 0.75rem;
+    overflow-y: auto;
+  }
+
+  &__footer {
+    padding: 0.85rem;
+    border-top: 1px solid var(--cd-border);
+  }
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0.8rem;
+  padding: 0.7rem 0.85rem;
+  border-radius: 10px;
+  color: var(--cd-muted);
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 0.12s ease, color 0.12s ease;
+
+  i {
+    font-size: 1.02rem;
+  }
+
+  &:hover {
+    background: #f4f6fa;
+    color: var(--cd-ink);
+  }
+
+  &.is-active {
+    background: var(--cd-blue-soft);
+    color: var(--cd-blue);
+  }
+}
+
+.version {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+  padding: 0.7rem 0.65rem;
+  background: #f7f9fc;
+  border: 1px solid var(--cd-border);
+  border-radius: 10px;
+
+  i {
+    color: var(--cd-muted);
+    font-size: 1rem;
+  }
+
+  strong {
+    display: block;
+    font-size: 0.78rem;
+    color: var(--cd-ink);
+  }
+
+  span {
+    display: block;
+    font-size: 0.68rem;
+    color: var(--cd-muted);
+    line-height: 1.35;
+  }
+}
+
+.collapse {
+  margin-top: 0.6rem;
+  margin-left: auto;
+  display: flex;
+  width: 30px;
+  height: 30px;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid var(--cd-border);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--cd-muted);
+  cursor: pointer;
+
+  &:hover {
+    background: #f4f6fa;
+  }
+}

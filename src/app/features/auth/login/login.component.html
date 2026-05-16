@@ -1,0 +1,152 @@
+<div class="login">
+  <!-- ============ Panel izquierdo (marca + ilustración) ============ -->
+  <section class="panel">
+    <header class="brand">
+      <span class="brand__icon"><i class="pi pi-wallet"></i></span>
+      <span class="brand__text">
+        <span class="brand__name"><b>COBRO</b><em>DIARIO</em></span>
+        <span class="brand__sub">Sistema de Gestión de Cobro</span>
+      </span>
+    </header>
+
+    <div class="panel__body">
+      <div class="hero">
+        <h1 class="hero__title">Controla tu recaudo.<br />Todos los días.</h1>
+        <p class="hero__text">
+          Gestiona rutas, registra cobros, consulta reportes y lleva el control
+          de la operación en tiempo real.
+        </p>
+      </div>
+
+      <div class="art">
+        <img src="login-ilustracion.png" alt="Ilustración de recaudo diario" />
+      </div>
+    </div>
+
+    <ul class="features">
+      <li class="feature">
+        <span class="feature__icon"><i class="pi pi-share-alt"></i></span>
+        <div class="feature__body">
+          <h3>Control de rutas</h3>
+          <p>Planifica, asigna y monitorea rutas de recaudo en tiempo real.</p>
+        </div>
+      </li>
+      <li class="feature">
+        <span class="feature__icon"><i class="pi pi-wallet"></i></span>
+        <div class="feature__body">
+          <h3>Recaudo diario</h3>
+          <p>Registra cobros, medios de pago y cierres de jornada fácilmente.</p>
+        </div>
+      </li>
+      <li class="feature">
+        <span class="feature__icon"><i class="pi pi-shield"></i></span>
+        <div class="feature__body">
+          <h3>Auditoría y trazabilidad</h3>
+          <p>Consultas, reportes y bitácoras para mayor seguridad y control.</p>
+        </div>
+      </li>
+    </ul>
+  </section>
+
+  <!-- ============ Tarjeta de login ============ -->
+  <section class="form-area">
+    <form class="card" [formGroup]="form" (ngSubmit)="ingresar()">
+      <h2 class="card__title">Iniciar sesión</h2>
+      <p class="card__subtitle">Accede a tu cuenta para gestionar el recaudo diario</p>
+
+      <!-- Rol -->
+      <div class="field">
+        <label class="field__label">Rol</label>
+        <div class="rol">
+          <button
+            type="button"
+            class="rol__opt"
+            [class.is-active]="form.controls.rol.value === 'ADMINISTRADOR'"
+            (click)="seleccionarRol('ADMINISTRADOR')"
+          >
+            <i class="pi pi-user"></i>
+            <span>Administrador</span>
+          </button>
+          <button
+            type="button"
+            class="rol__opt"
+            [class.is-active]="form.controls.rol.value === 'TRABAJADOR'"
+            (click)="seleccionarRol('TRABAJADOR')"
+          >
+            <i class="pi pi-user"></i>
+            <span>Trabajador</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Correo -->
+      <div class="field">
+        <label class="field__label" for="correo">Correo electrónico</label>
+        <div class="control" [class.is-error]="esInvalido('correo')">
+          <i class="pi pi-envelope control__icon"></i>
+          <input
+            id="correo"
+            type="email"
+            class="control__input"
+            formControlName="correo"
+            placeholder="ejemplo@empresa.com"
+            autocomplete="username"
+          />
+        </div>
+        @if (esInvalido('correo')) {
+          <small class="field__error">Ingresa un correo válido.</small>
+        }
+      </div>
+
+      <!-- Contraseña -->
+      <div class="field">
+        <label class="field__label" for="password">Contraseña</label>
+        <div class="control" [class.is-error]="esInvalido('password')">
+          <i class="pi pi-lock control__icon"></i>
+          <input
+            id="password"
+            [type]="verPassword() ? 'text' : 'password'"
+            class="control__input control__input--trailing"
+            formControlName="password"
+            placeholder="Ingresa tu contraseña"
+            autocomplete="current-password"
+          />
+          <button
+            type="button"
+            class="control__toggle"
+            (click)="verPassword.set(!verPassword())"
+            [attr.aria-label]="verPassword() ? 'Ocultar contraseña' : 'Mostrar contraseña'"
+          >
+            <i class="pi" [class.pi-eye]="!verPassword()" [class.pi-eye-slash]="verPassword()"></i>
+          </button>
+        </div>
+        @if (esInvalido('password')) {
+          <small class="field__error">La contraseña es obligatoria.</small>
+        }
+      </div>
+
+      <!-- Recordarme + olvido -->
+      <div class="row">
+        <label class="check">
+          <input type="checkbox" formControlName="recordarme" />
+          <span class="check__box"><i class="pi pi-check"></i></span>
+          <span class="check__label">Recordarme</span>
+        </label>
+        <a class="link" href="javascript:void(0)">¿Olvidaste tu contraseña?</a>
+      </div>
+
+      <!-- Ingresar -->
+      <button type="submit" class="submit" [disabled]="cargando()">
+        @if (cargando()) {
+          <i class="pi pi-spinner pi-spin"></i>
+        }
+        <span>Ingresar</span>
+      </button>
+
+      <p class="card__foot">
+        <i class="pi pi-lock"></i>
+        Acceso seguro para administradores y trabajadores
+      </p>
+    </form>
+  </section>
+</div>

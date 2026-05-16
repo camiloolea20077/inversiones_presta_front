@@ -1,0 +1,212 @@
+<div class="movil">
+  <!-- ===================== Encabezado ===================== -->
+  <header class="cab">
+    <button type="button" class="cab__icon" (click)="cerrarSesion()" title="Cerrar sesión">
+      <i class="pi pi-sign-out"></i>
+    </button>
+    <div class="cab__titulo">
+      <strong>{{ recaudo()?.rutaNombre || 'Mi ruta' }} · Cobro del día</strong>
+      <span>{{ fechaHoy }}</span>
+    </div>
+    <button type="button" class="cab__icon" (click)="cargar()" title="Actualizar">
+      <i class="pi pi-refresh"></i>
+    </button>
+  </header>
+
+  <main class="cuerpo">
+    @if (loading()) {
+      <div class="aviso">
+        <i class="pi pi-spin pi-spinner"></i>
+        <p>Cargando tu ruta…</p>
+      </div>
+    } @else if (errorMsg()) {
+      <div class="aviso">
+        <i class="pi pi-exclamation-triangle"></i>
+        <p>{{ errorMsg() }}</p>
+        <button type="button" class="btn btn--primary" (click)="cargar()">
+          Reintentar
+        </button>
+      </div>
+    } @else if (recaudo(); as r) {
+      <!-- Resumen -->
+      <section class="resumen">
+        <div class="resumen__item">
+          <i class="pi pi-users tono-blue"></i>
+          <span>Clientes</span>
+          <strong>{{ r.totalClientes }}</strong>
+        </div>
+        <div class="resumen__item">
+          <i class="pi pi-check-circle tono-green"></i>
+          <span>Pagados</span>
+          <strong>{{ r.clientesPagados }}</strong>
+        </div>
+        <div class="resumen__item">
+          <i class="pi pi-clock tono-amber"></i>
+          <span>Pendientes</span>
+          <strong>{{ r.clientesPendientes }}</strong>
+        </div>
+        <div class="resumen__item">
+          <i class="pi pi-dollar tono-green"></i>
+          <span>Recaudado</span>
+          <strong class="mini">{{ moneda(r.totalRecaudado) }}</strong>
+        </div>
+      </section>
+
+      <!-- Progreso -->
+      <section class="progreso">
+        <div class="progreso__top">
+          <span>Progreso de la ruta</span>
+          <span>{{ r.clientesPagados }} de {{ r.totalClientes }}</span>
+        </div>
+        <div class="progreso__track">
+          <span class="progreso__fill" [style.width.%]="progreso()"></span>
+        </div>
+      </section>
+
+      <!-- Tarjetas de cliente -->
+      @if (r.detalles.length === 0) {
+        <div class="aviso">
+          <i class="pi pi-inbox"></i>
+          <p>Tu ruta no tiene clientes asignados todavía.</p>
+        </div>
+      } @else {
+        <section class="lista">
+          @for (d of r.detalles; track d.id) {
+            <article class="tarjeta" [class]="'estado-' + d.estado.toLowerCase()">
+              <div class="tarjeta__cab">
+                <span class="tarjeta__orden">{{ ordenTexto(d.orden) }}</span>
+                <div class="tarjeta__cliente">
+                  <strong>{{ d.clienteNombre }}</strong>
+                  <span><i class="pi pi-map-marker"></i> {{ d.clienteDireccion || 'Sin dirección' }}</span>
+                </div>
+                <span class="chip" [class]="'chip--' + d.estado.toLowerCase()">
+                  {{ d.estado.replace('_', ' ') }}
+                </span>
+              </div>
+
+              <div class="tarjeta__pie">
+                <div class="montos">
+                  <div>
+                    <span>Cuota</span>
+                    <strong>{{ moneda(d.valorEsperado) }}</strong>
+                  </div>
+                  <div>
+                    <span>Saldo</span>
+                    <strong class="saldo">{{ moneda(d.saldoPendiente) }}</strong>
+                  </div>
+                </div>
+
+                @if (d.estado === 'PENDIENTE') {
+                  <button type="button" class="btn btn--primary" (click)="abrirPago(d)">
+                    <i class="pi pi-dollar"></i> Registrar pago
+                  </button>
+                } @else if (d.estado === 'PARCIAL') {
+                  <button type="button" class="btn btn--amber" (click)="abrirPago(d)">
+                    <i class="pi pi-dollar"></i> Completar pago
+                  </button>
+                }
+              </div>
+            </article>
+          }
+        </section>
+      }
+
+      <button type="button" class="btn btn--bloque" (click)="agregarCliente()">
+        <i class="pi pi-plus"></i> Agregar cliente cerca
+      </button>
+    }
+  </main>
+
+  <!-- ===================== Navegación inferior ===================== -->
+  <nav class="navinf">
+    <button type="button" class="navinf__item is-active">
+      <i class="pi pi-map"></i><span>Ruta del día</span>
+    </button>
+    <button type="button" class="navinf__item" (click)="cargar()">
+      <i class="pi pi-refresh"></i><span>Actualizar</span>
+    </button>
+    <button type="button" class="navinf__item" (click)="agregarCliente()">
+      <i class="pi pi-users"></i><span>Clientes</span>
+    </button>
+    <button type="button" class="navinf__item" (click)="cerrarSesion()">
+      <i class="pi pi-cog"></i><span>Más</span>
+    </button>
+  </nav>
+</div>
+
+<!-- ===================== Diálogo de pago ===================== -->
+<p-dialog
+  [visible]="dialogPagoVisible()"
+  (visibleChange)="dialogPagoVisible.set($event)"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [dismissableMask]="true"
+  [style]="{ width: '92vw', maxWidth: '420px' }"
+  header="Registrar pago"
+>
+  @if (detalleSeleccionado(); as d) {
+    <div class="pago">
+      <div class="pago__cliente">
+        <span class="pago__orden">{{ ordenTexto(d.orden) }}</span>
+        <div>
+          <strong>{{ d.clienteNombre }}</strong>
+          <span>{{ d.clienteDireccion || 'Sin dirección' }}</span>
+        </div>
+      </div>
+
+      <div class="pago__montos">
+        <div>
+          <span>Cuota esperada</span>
+          <strong>{{ moneda(d.valorEsperado) }}</strong>
+        </div>
+        <div>
+          <span>Saldo del préstamo</span>
+          <strong class="saldo">{{ moneda(d.saldoPendiente) }}</strong>
+        </div>
+      </div>
+
+      <form class="pago-form" [formGroup]="formPago">
+        <div class="campo">
+          <label>Valor recibido *</label>
+          <input type="number" min="0" formControlName="valorPago" />
+        </div>
+        <div class="campo">
+          <label>Forma de pago *</label>
+          <select formControlName="formaPago">
+            @for (f of formasPago; track f) {
+              <option [value]="f">{{ f }}</option>
+            }
+          </select>
+        </div>
+        <div class="campo">
+          <label>Observación</label>
+          <textarea rows="2" formControlName="observacion"
+            placeholder="Nota del pago o de la visita"></textarea>
+        </div>
+      </form>
+
+      <div class="pago-acciones">
+        <button
+          type="button"
+          class="btn btn--ghost"
+          [disabled]="guardandoPago()"
+          (click)="marcarNoPago()"
+        >
+          <i class="pi pi-times-circle"></i> No pagó
+        </button>
+        <button
+          type="button"
+          class="btn btn--primary"
+          [disabled]="guardandoPago()"
+          (click)="guardarPago()"
+        >
+          @if (guardandoPago()) {
+            <i class="pi pi-spin pi-spinner"></i>
+          }
+          Guardar pago
+        </button>
+      </div>
+    </div>
+  }
+</p-dialog>

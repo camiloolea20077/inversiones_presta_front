@@ -30,6 +30,8 @@
     "@angular/router": "^20.3.0",
     "@primeng/themes": "^20.4.0",
     "@tailwindcss/postcss": "^4.3.0",
+    "chart.js": "^4.5.1",
+    "chartjs-plugin-datalabels": "^2.2.0",
     "postcss": "^8.5.14",
     "primeicons": "^7.0.0",
     "primeng": "^20.4.0",

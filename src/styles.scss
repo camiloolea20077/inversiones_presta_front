@@ -3,3 +3,21 @@
 @use "tailwindcss";
 @plugin 'tailwindcss-primeui';
 @layer tailwind, primeng;
+
+:root {
+  --cd-blue: #0b53d7;
+  --cd-blue-hover: #0a47b8;
+  --cd-blue-soft: #eef3fd;
+  --cd-ink: #1e293b;
+  --cd-muted: #64748b;
+  --cd-border: #e8ebf1;
+  --cd-bg: #f1f4f9;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+  color: var(--cd-ink);
+}

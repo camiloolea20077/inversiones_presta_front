@@ -1,0 +1,35 @@
+<aside class="sidebar">
+  <div class="sidebar__brand">
+    <span class="sidebar__logo"><i class="pi pi-dollar"></i></span>
+    <span class="sidebar__brand-text">
+      <span class="sidebar__name"><b>COBRO</b><em>DIARIO</em></span>
+      <span class="sidebar__sub">Sistema de Gestión</span>
+    </span>
+  </div>
+
+  <nav class="sidebar__nav">
+    @for (item of menu; track item.route) {
+      <a
+        class="nav-item"
+        [routerLink]="item.route"
+        routerLinkActive="is-active"
+      >
+        <i [class]="item.icon"></i>
+        <span>{{ item.label }}</span>
+      </a>
+    }
+  </nav>
+
+  <div class="sidebar__footer">
+    <div class="version">
+      <i class="pi pi-server"></i>
+      <div>
+        <strong>Cobro Diario v1.0.0</strong>
+        <span>© 2025 Todos los derechos reservados.</span>
+      </div>
+    </div>
+    <button type="button" class="collapse" aria-label="Colapsar menú">
+      <i class="pi pi-angle-double-left"></i>
+    </button>
+  </div>
+</aside>

@@ -1,0 +1,46 @@
+<header class="topbar">
+  <div class="topbar__left">
+    <button type="button" class="topbar__burger" aria-label="Menú">
+      <i class="pi pi-bars"></i>
+    </button>
+    <div class="topbar__title">
+      <h1>{{ titulo() }}</h1>
+      <p>{{ subtitulo() }}</p>
+    </div>
+  </div>
+
+  <div class="topbar__right">
+    <span class="date-pill">
+      <i class="pi pi-calendar"></i>
+      {{ fecha }}
+    </span>
+
+    <button type="button" class="btn btn--ghost">
+      <i class="pi pi-download"></i>
+      Exportar
+    </button>
+
+    @if (accion(); as a) {
+      <button type="button" class="btn btn--primary" (click)="ejecutarAccion()">
+        <i [class]="a.icon"></i>
+        {{ a.label }}
+      </button>
+    }
+
+    <div class="user">
+      <span class="user__avatar"><i class="pi pi-user"></i></span>
+      <span class="user__info">
+        <strong>{{ usuario()?.nombreCompleto ?? 'Administrador' }}</strong>
+        <small>{{ usuario()?.correo ?? 'admin@sistema.com' }}</small>
+      </span>
+      <button
+        type="button"
+        class="user__logout"
+        title="Cerrar sesión"
+        (click)="cerrarSesion()"
+      >
+        <i class="pi pi-sign-out"></i>
+      </button>
+    </div>
+  </div>
+</header>

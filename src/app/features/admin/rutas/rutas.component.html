@@ -1,0 +1,509 @@
+<div class="rutas">
+  <!-- ===================== Lista de rutas ===================== -->
+  <section class="card">
+    <header class="card__head">
+      <h2>Lista de rutas</h2>
+
+      <div class="filtros">
+        <div class="field-search">
+          <i class="pi pi-search"></i>
+          <input
+            type="text"
+            placeholder="Buscar por nombre o zona…"
+            [(ngModel)]="search"
+            (keyup.enter)="buscar()"
+          />
+        </div>
+
+        <label class="select">
+          <span>Estado</span>
+          <select
+            [(ngModel)]="filtroEstado"
+            (ngModelChange)="cambiarFiltroEstado($event)"
+          >
+            <option value="">Todos</option>
+            <option value="ACTIVO">Activas</option>
+            <option value="INACTIVO">Inactivas</option>
+          </select>
+        </label>
+
+        <button type="button" class="btn btn--ghost" (click)="limpiarFiltros()">
+          <i class="pi pi-filter-slash"></i> Limpiar filtros
+        </button>
+      </div>
+    </header>
+
+    <div class="card__body">
+      <table class="table">
+        <thead>
+          <tr>
+            <th class="col-num">#</th>
+            <th>Ruta</th>
+            <th>Zona</th>
+            <th>Trabajador asignado</th>
+            <th>Clientes</th>
+            <th>Estado</th>
+            <th class="col-acciones">Acciones</th>
+          </tr>
+        </thead>
+        <tbody>
+          @if (loading()) {
+            <tr>
+              <td colspan="7" class="estado-fila">
+                <i class="pi pi-spin pi-spinner"></i> Cargando…
+              </td>
+            </tr>
+          } @else if (rows().length === 0) {
+            <tr>
+              <td colspan="7" class="estado-fila">No hay rutas registradas.</td>
+            </tr>
+          } @else {
+            @for (r of rows(); track r.id; let i = $index) {
+              <tr
+                [class.is-selected]="seleccionada()?.id === r.id"
+                (click)="seleccionar(r)"
+              >
+                <td class="col-num muted">{{ page() * tamano + i + 1 }}</td>
+                <td>
+                  <div class="ruta-cell">
+                    <span class="ruta-ic"><i class="pi pi-map-marker"></i></span>
+                    <strong>{{ r.nombre }}</strong>
+                  </div>
+                </td>
+                <td class="muted">{{ r.zona || '—' }}</td>
+                <td>
+                  @if (r.trabajador) {
+                    {{ r.trabajador }}
+                  } @else {
+                    <span class="muted">Sin asignar</span>
+                  }
+                </td>
+                <td class="num">{{ r.clientes }}</td>
+                <td>
+                  <span
+                    class="badge"
+                    [class.badge--ok]="r.estado === 'ACTIVO'"
+                    [class.badge--off]="r.estado !== 'ACTIVO'"
+                  >
+                    {{ r.estado }}
+                  </span>
+                </td>
+                <td>
+                  <div class="acciones">
+                    <button
+                      type="button"
+                      class="icon-btn"
+                      title="Editar"
+                      (click)="editar(r); $event.stopPropagation()"
+                    >
+                      <i class="pi pi-pencil"></i>
+                    </button>
+                    <button
+                      type="button"
+                      class="icon-btn"
+                      title="Asignar trabajador"
+                      (click)="abrirAsignar(r); $event.stopPropagation()"
+                    >
+                      <i class="pi pi-user-plus"></i>
+                    </button>
+                    <button
+                      type="button"
+                      class="icon-btn"
+                      [title]="r.estado === 'ACTIVO' ? 'Inactivar' : 'Activar'"
+                      (click)="toggleEstado(r); $event.stopPropagation()"
+                    >
+                      <i
+                        class="pi"
+                        [class.pi-ban]="r.estado === 'ACTIVO'"
+                        [class.pi-check-circle]="r.estado !== 'ACTIVO'"
+                      ></i>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <footer class="paginador">
+      <span class="paginador__info">
+        Mostrando {{ rows().length }} de {{ totalElements() }} rutas
+      </span>
+      <div class="paginador__nav">
+        <button
+          type="button"
+          class="icon-btn"
+          [disabled]="page() === 0"
+          (click)="irPagina(page() - 1)"
+        >
+          <i class="pi pi-chevron-left"></i>
+        </button>
+        <span class="paginador__page">{{ page() + 1 }}</span>
+        <button
+          type="button"
+          class="icon-btn"
+          [disabled]="page() + 1 >= totalPages()"
+          (click)="irPagina(page() + 1)"
+        >
+          <i class="pi pi-chevron-right"></i>
+        </button>
+      </div>
+    </footer>
+  </section>
+
+  <!-- ===================== Detalle + clientes ===================== -->
+  <section class="cards">
+    <!-- Detalle de la ruta -->
+    <article class="card panel">
+      <header class="panel__head">
+        <h3>Detalle de la ruta</h3>
+      </header>
+      @if (seleccionada(); as r) {
+        <div class="panel__body">
+          <ul class="datos">
+            <li>
+              <i class="pi pi-map-marker"></i>
+              <span>Ruta</span>
+              <strong>{{ r.nombre }}</strong>
+            </li>
+            <li>
+              <i class="pi pi-compass"></i>
+              <span>Zona</span>
+              <strong>{{ r.zona || '—' }}</strong>
+            </li>
+            <li>
+              <i class="pi pi-user"></i>
+              <span>Trabajador asignado</span>
+              <strong>{{ r.trabajador || 'Sin asignar' }}</strong>
+            </li>
+            <li>
+              <i class="pi pi-calendar"></i>
+              <span>Fecha de creación</span>
+              <strong>{{ r.fecha_creacion || '—' }}</strong>
+            </li>
+            <li>
+              <i class="pi pi-users"></i>
+              <span>Clientes asignados</span>
+              <strong>{{ r.clientes }}</strong>
+            </li>
+            <li>
+              <i class="pi pi-flag"></i>
+              <span>Estado</span>
+              <strong>
+                <span
+                  class="badge"
+                  [class.badge--ok]="r.estado === 'ACTIVO'"
+                  [class.badge--off]="r.estado !== 'ACTIVO'"
+                >
+                  {{ r.estado }}
+                </span>
+              </strong>
+            </li>
+            <li>
+              <i class="pi pi-align-left"></i>
+              <span>Descripción</span>
+              <strong>{{ r.descripcion || '—' }}</strong>
+            </li>
+          </ul>
+
+          <button type="button" class="btn btn--outline" (click)="abrirAsignar(r)">
+            <i class="pi pi-user-plus"></i> Asignar trabajador
+          </button>
+        </div>
+      } @else {
+        <div class="panel__vacio">
+          <i class="pi pi-map"></i>
+          <p>Selecciona una ruta para ver su detalle.</p>
+        </div>
+      }
+    </article>
+
+    <!-- Orden de clientes en la ruta -->
+    <article class="card panel">
+      <header class="panel__head panel__head--acciones">
+        <h3>Orden de clientes en la ruta</h3>
+        @if (seleccionada()) {
+          <div class="panel__acciones">
+            @if (ordenSucio()) {
+              <button
+                type="button"
+                class="btn btn--ghost btn--sm"
+                (click)="restablecerOrden()"
+              >
+                <i class="pi pi-undo"></i> Restablecer
+              </button>
+              <button
+                type="button"
+                class="btn btn--primary btn--sm"
+                [disabled]="guardandoOrden()"
+                (click)="guardarOrden()"
+              >
+                @if (guardandoOrden()) {
+                  <i class="pi pi-spin pi-spinner"></i>
+                }
+                Guardar orden
+              </button>
+            } @else {
+              <button
+                type="button"
+                class="btn btn--ghost btn--sm"
+                (click)="abrirInsertar()"
+              >
+                <i class="pi pi-plus"></i> Agregar cliente
+              </button>
+            }
+          </div>
+        }
+      </header>
+
+      @if (!seleccionada()) {
+        <div class="panel__vacio">
+          <i class="pi pi-list"></i>
+          <p>Selecciona una ruta para ver su recorrido.</p>
+        </div>
+      } @else if (clientesCargando()) {
+        <div class="panel__vacio">
+          <i class="pi pi-spin pi-spinner"></i>
+          <p>Cargando clientes…</p>
+        </div>
+      } @else if (clientesRuta().length === 0) {
+        <div class="panel__vacio">
+          <i class="pi pi-users"></i>
+          <p>Esta ruta aún no tiene clientes en el recorrido.</p>
+        </div>
+      } @else {
+        <ul class="orden">
+          @for (rc of clientesRuta(); track rc.id; let i = $index) {
+            <li class="orden__item">
+              <span class="orden__pos">{{ i + 1 }}</span>
+              <div class="orden__info">
+                <strong>{{ rc.nombre }}</strong>
+                <span>{{ rc.direccion || 'Sin dirección' }} · {{ rc.telefono || 's/teléfono' }}</span>
+              </div>
+              <div class="orden__acciones">
+                <button
+                  type="button"
+                  class="icon-btn"
+                  title="Subir"
+                  [disabled]="i === 0"
+                  (click)="moverArriba(i)"
+                >
+                  <i class="pi pi-chevron-up"></i>
+                </button>
+                <button
+                  type="button"
+                  class="icon-btn"
+                  title="Bajar"
+                  [disabled]="i === clientesRuta().length - 1"
+                  (click)="moverAbajo(i)"
+                >
+                  <i class="pi pi-chevron-down"></i>
+                </button>
+                <button
+                  type="button"
+                  class="icon-btn icon-btn--danger"
+                  title="Quitar de la ruta"
+                  (click)="quitarCliente(rc)"
+                >
+                  <i class="pi pi-times"></i>
+                </button>
+              </div>
+            </li>
+          }
+        </ul>
+      }
+    </article>
+  </section>
+</div>
+
+<!-- ===================== Diálogo crear / editar ===================== -->
+<p-dialog
+  [visible]="dialogVisible()"
+  (visibleChange)="dialogVisible.set($event)"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: '500px' }"
+  [header]="tituloDialogo()"
+>
+  <form class="form" [formGroup]="formRuta">
+    <div class="form__field">
+      <label>Nombre de la ruta *</label>
+      <input
+        type="text"
+        formControlName="nombre"
+        placeholder="Ej. RTA-01 Centro"
+        [class.is-invalid]="campoInvalido(formRuta, 'nombre')"
+      />
+      @if (campoInvalido(formRuta, 'nombre')) {
+        <small class="form__error">El nombre es obligatorio.</small>
+      }
+    </div>
+
+    <div class="form__field">
+      <label>Zona</label>
+      <input type="text" formControlName="zona" placeholder="Ej. Centro" />
+    </div>
+
+    <div class="form__field">
+      <label>Descripción</label>
+      <textarea
+        rows="3"
+        formControlName="descripcion"
+        placeholder="Descripción o cubrimiento de la ruta"
+      ></textarea>
+    </div>
+
+    <div class="form__field">
+      <label>Trabajador asignado</label>
+      <select formControlName="trabajadorId">
+        <option [ngValue]="null">Sin asignar</option>
+        @for (t of trabajadores(); track t.id) {
+          <option [ngValue]="t.id">{{ t.nombre }}</option>
+        }
+      </select>
+    </div>
+
+    <label class="switch">
+      <input type="checkbox" formControlName="activo" />
+      <span>Ruta activa</span>
+    </label>
+  </form>
+
+  <div class="form__actions">
+    <button type="button" class="btn btn--ghost" (click)="dialogVisible.set(false)">
+      Cancelar
+    </button>
+    <button
+      type="button"
+      class="btn btn--primary"
+      [disabled]="guardando()"
+      (click)="guardar()"
+    >
+      @if (guardando()) {
+        <i class="pi pi-spin pi-spinner"></i>
+      }
+      Guardar
+    </button>
+  </div>
+</p-dialog>
+
+<!-- ===================== Diálogo asignar trabajador ===================== -->
+<p-dialog
+  [visible]="dialogAsignarVisible()"
+  (visibleChange)="dialogAsignarVisible.set($event)"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: '420px' }"
+  header="Asignar trabajador"
+>
+  @if (rutaAsignar(); as r) {
+    <p class="form__hint">
+      Selecciona el trabajador que recorrerá la ruta
+      <strong>{{ r.nombre }}</strong>.
+    </p>
+  }
+  <form class="form" [formGroup]="formAsignar">
+    <div class="form__field">
+      <label>Trabajador *</label>
+      <select
+        formControlName="trabajadorId"
+        [class.is-invalid]="campoInvalido(formAsignar, 'trabajadorId')"
+      >
+        <option [ngValue]="null">Selecciona un trabajador</option>
+        @for (t of trabajadores(); track t.id) {
+          <option [ngValue]="t.id">{{ t.nombre }}</option>
+        }
+      </select>
+      @if (campoInvalido(formAsignar, 'trabajadorId')) {
+        <small class="form__error">Debes seleccionar un trabajador.</small>
+      }
+    </div>
+  </form>
+
+  <div class="form__actions">
+    <button
+      type="button"
+      class="btn btn--ghost"
+      (click)="dialogAsignarVisible.set(false)"
+    >
+      Cancelar
+    </button>
+    <button
+      type="button"
+      class="btn btn--primary"
+      [disabled]="guardandoAsignar()"
+      (click)="asignar()"
+    >
+      @if (guardandoAsignar()) {
+        <i class="pi pi-spin pi-spinner"></i>
+      }
+      Asignar
+    </button>
+  </div>
+</p-dialog>
+
+<!-- ===================== Diálogo agregar cliente a la ruta ===================== -->
+<p-dialog
+  [visible]="dialogInsertarVisible()"
+  (visibleChange)="dialogInsertarVisible.set($event)"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: '440px' }"
+  header="Agregar cliente a la ruta"
+>
+  <form class="form" [formGroup]="formInsertar">
+    <div class="form__field">
+      <label>Cliente *</label>
+      <select
+        formControlName="clienteId"
+        [class.is-invalid]="campoInvalido(formInsertar, 'clienteId')"
+      >
+        <option [ngValue]="null">Selecciona un cliente</option>
+        @for (c of clientesCombo(); track c.id) {
+          <option [ngValue]="c.id">{{ c.nombre }}</option>
+        }
+      </select>
+      @if (campoInvalido(formInsertar, 'clienteId')) {
+        <small class="form__error">Debes seleccionar un cliente.</small>
+      }
+    </div>
+
+    <div class="form__field">
+      <label>Posición en el recorrido</label>
+      <select formControlName="ordenBase">
+        <option [ngValue]="null">Al final del recorrido</option>
+        @for (rc of clientesRuta(); track rc.id) {
+          <option [ngValue]="rc.orden">
+            Después de #{{ rc.orden }} · {{ rc.nombre }}
+          </option>
+        }
+      </select>
+    </div>
+  </form>
+
+  <div class="form__actions">
+    <button
+      type="button"
+      class="btn btn--ghost"
+      (click)="dialogInsertarVisible.set(false)"
+    >
+      Cancelar
+    </button>
+    <button
+      type="button"
+      class="btn btn--primary"
+      [disabled]="guardandoInsertar()"
+      (click)="insertarCliente()"
+    >
+      @if (guardandoInsertar()) {
+        <i class="pi pi-spin pi-spinner"></i>
+      }
+      Agregar
+    </button>
+  </div>
+</p-dialog>
