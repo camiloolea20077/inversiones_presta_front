@@ -1,0 +1,245 @@
+<div class="movil">
+  <!-- ===================== Encabezado ===================== -->
+  <header class="cab">
+    <button type="button" class="cab__icon" (click)="irARuta()" title="Volver a la ruta">
+      <i class="pi pi-arrow-left"></i>
+    </button>
+    <div class="cab__titulo">
+      <strong>Mi caja del día</strong>
+      <span>{{ rutaNombre() || 'Sin ruta' }} · {{ fechaHoy }}</span>
+    </div>
+    <button type="button" class="cab__icon" (click)="cargar()" title="Actualizar">
+      <i class="pi pi-refresh"></i>
+    </button>
+  </header>
+
+  <main class="cuerpo">
+    @if (loading()) {
+      <div class="aviso">
+        <i class="pi pi-spin pi-spinner"></i>
+        <p>Cargando tu caja…</p>
+      </div>
+    } @else if (errorMsg()) {
+      <div class="aviso">
+        <i class="pi pi-exclamation-triangle"></i>
+        <p>{{ errorMsg() }}</p>
+        <button type="button" class="btn btn--primary" (click)="cargar()">Reintentar</button>
+      </div>
+    } @else if (sinCaja()) {
+      <!-- ===== Aún no se abrió caja hoy ===== -->
+      <div class="aviso">
+        <i class="pi pi-wallet"></i>
+        <p>Todavía no has abierto tu caja del día.</p>
+        <button type="button" class="btn btn--primary" (click)="abrirDialogoAbrir()">
+          <i class="pi pi-plus"></i> Abrir caja
+        </button>
+      </div>
+    } @else if (caja(); as c) {
+      <!-- ===== Estado de la caja ===== -->
+      <div class="estado-banner" [class]="'estado-' + c.estado.toLowerCase()">
+        <i class="pi" [class.pi-lock-open]="cajaAbierta()" [class.pi-lock]="!cajaAbierta()"></i>
+        <span>Caja {{ estadoTexto(c.estado) }}</span>
+      </div>
+
+      <!-- ===== Resumen de valores ===== -->
+      <section class="resumen">
+        <div class="resumen__item">
+          <i class="pi pi-wallet tono-blue"></i>
+          <span>Caja inicial</span>
+          <strong>{{ moneda(c.valorInicial) }}</strong>
+        </div>
+        <div class="resumen__item">
+          <i class="pi pi-arrow-up-right tono-amber"></i>
+          <span>Préstamos entregados</span>
+          <strong>{{ moneda(c.valorPrestamosEntregados) }}</strong>
+        </div>
+        <div class="resumen__item">
+          <i class="pi pi-arrow-down-left tono-green"></i>
+          <span>Recaudo recibido</span>
+          <strong>{{ moneda(c.valorRecaudado) }}</strong>
+        </div>
+        <div class="resumen__item resumen__item--destacado">
+          <i class="pi pi-check-circle"></i>
+          <span>Valor esperado de cierre</span>
+          <strong>{{ moneda(c.valorEsperadoCierre) }}</strong>
+        </div>
+      </section>
+
+      <!-- ===== Fórmula del esperado ===== -->
+      <p class="formula">
+        Inicial − Préstamos + Recaudo = <strong>{{ moneda(c.valorEsperadoCierre) }}</strong>
+      </p>
+
+      <!-- ===== Resultado del cierre (si ya cerró) ===== -->
+      @if (!cajaAbierta()) {
+        <section class="cierre-result">
+          <div>
+            <span>Valor entregado</span>
+            <strong>{{ moneda(c.valorEntregado) }}</strong>
+          </div>
+          <div>
+            <span>Diferencia</span>
+            <strong
+              [class.dif-pos]="c.diferencia > 0"
+              [class.dif-neg]="c.diferencia < 0"
+            >{{ moneda(c.diferencia) }}</strong>
+          </div>
+        </section>
+      }
+
+      <!-- ===== Movimientos de caja ===== -->
+      <section class="mov">
+        <div class="mov__cab">
+          <span><i class="pi pi-list"></i> Movimientos del día</span>
+          <span class="mov__count">{{ c.movimientos.length }}</span>
+        </div>
+        @if (c.movimientos.length === 0) {
+          <p class="mov__vacio">Aún no hay movimientos registrados.</p>
+        } @else {
+          <ul class="mov__lista">
+            @for (m of c.movimientos; track m.id) {
+              <li class="mov__item">
+                <span class="mov__icono" [class.es-egreso]="esEgreso(m)">
+                  <i [class]="iconoMovimiento(m.tipoMovimiento)"></i>
+                </span>
+                <div class="mov__info">
+                  <strong>{{ etiquetaMovimiento(m.tipoMovimiento) }}</strong>
+                  <span>{{ horaMovimiento(m.fechaMovimiento) }}
+                    @if (m.referenciaTipo) {
+                      · {{ m.referenciaTipo }} #{{ m.referenciaId }}
+                    }
+                  </span>
+                </div>
+                <strong class="mov__valor" [class.es-egreso]="esEgreso(m)">
+                  {{ esEgreso(m) ? '−' : '+' }} {{ moneda(m.valor) }}
+                </strong>
+              </li>
+            }
+          </ul>
+        }
+      </section>
+
+      <!-- ===== Acción de cierre ===== -->
+      @if (cajaAbierta()) {
+        <button type="button" class="btn btn--primary btn--bloque-llena" (click)="abrirDialogoCerrar()">
+          <i class="pi pi-lock"></i> Cerrar caja del día
+        </button>
+      } @else {
+        <p class="cerrada-nota">
+          <i class="pi pi-info-circle"></i>
+          Tu caja ya fue cerrada. No se puede cerrar de nuevo.
+        </p>
+      }
+    }
+  </main>
+
+  <!-- ===================== Navegación inferior ===================== -->
+  <nav class="navinf">
+    <button type="button" class="navinf__item" (click)="irARuta()">
+      <i class="pi pi-map"></i><span>Ruta del día</span>
+    </button>
+    <button type="button" class="navinf__item is-active">
+      <i class="pi pi-wallet"></i><span>Mi caja</span>
+    </button>
+    <button type="button" class="navinf__item" (click)="cargar()">
+      <i class="pi pi-refresh"></i><span>Actualizar</span>
+    </button>
+    <button type="button" class="navinf__item" (click)="cerrarSesion()">
+      <i class="pi pi-sign-out"></i><span>Salir</span>
+    </button>
+  </nav>
+</div>
+
+<!-- ===================== Diálogo abrir caja ===================== -->
+<p-dialog
+  [visible]="dialogAbrirVisible()"
+  (visibleChange)="dialogAbrirVisible.set($event)"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [dismissableMask]="true"
+  [style]="{ width: '92vw', maxWidth: '420px' }"
+  header="Abrir caja del día"
+>
+  <form class="pago-form" [formGroup]="formAbrir">
+    <div class="campo">
+      <label>Valor inicial *</label>
+      <input type="number" min="0" formControlName="valorInicial" />
+      <small>Dinero con el que inicias el recorrido.</small>
+    </div>
+    <div class="campo">
+      <label>Observación</label>
+      <textarea rows="2" formControlName="observacion"
+        placeholder="Nota de apertura"></textarea>
+    </div>
+  </form>
+  <div class="pago-acciones">
+    <button type="button" class="btn btn--ghost gris"
+      [disabled]="guardandoAbrir()" (click)="dialogAbrirVisible.set(false)">
+      Cancelar
+    </button>
+    <button type="button" class="btn btn--primary"
+      [disabled]="guardandoAbrir()" (click)="confirmarAbrir()">
+      @if (guardandoAbrir()) {
+        <i class="pi pi-spin pi-spinner"></i>
+      }
+      Abrir caja
+    </button>
+  </div>
+</p-dialog>
+
+<!-- ===================== Diálogo cerrar caja ===================== -->
+<p-dialog
+  [visible]="dialogCerrarVisible()"
+  (visibleChange)="dialogCerrarVisible.set($event)"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [dismissableMask]="true"
+  [style]="{ width: '92vw', maxWidth: '420px' }"
+  header="Cerrar caja del día"
+>
+  @if (caja(); as c) {
+    <div class="cerrar">
+      <div class="pago__montos">
+        <div>
+          <span>Valor esperado</span>
+          <strong>{{ moneda(c.valorEsperadoCierre) }}</strong>
+        </div>
+        <div>
+          <span>Diferencia</span>
+          <strong
+            [class.dif-pos]="diferenciaCierre() > 0"
+            [class.dif-neg]="diferenciaCierre() < 0"
+          >{{ moneda(diferenciaCierre()) }}</strong>
+        </div>
+      </div>
+
+      <form class="pago-form" [formGroup]="formCerrar">
+        <div class="campo">
+          <label>Valor entregado *</label>
+          <input type="number" min="0" formControlName="valorEntregado" />
+        </div>
+        <div class="campo">
+          <label>Observación @if (diferenciaCierre() !== 0) { * }</label>
+          <textarea rows="2" formControlName="observacion"
+            placeholder="Motivo de la diferencia o nota del cierre"></textarea>
+        </div>
+      </form>
+
+      <div class="pago-acciones">
+        <button type="button" class="btn btn--ghost gris"
+          [disabled]="guardandoCerrar()" (click)="dialogCerrarVisible.set(false)">
+          Cancelar
+        </button>
+        <button type="button" class="btn btn--primary"
+          [disabled]="guardandoCerrar()" (click)="confirmarCerrar()">
+          @if (guardandoCerrar()) {
+            <i class="pi pi-spin pi-spinner"></i>
+          }
+          Cerrar caja
+        </button>
+      </div>
+    </div>
+  }
+</p-dialog>

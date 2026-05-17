@@ -1,175 +1,123 @@
 <div class="dash">
-  <!-- ===================== KPIs ===================== -->
-  <section class="kpis">
-    @for (k of kpis; track k.label) {
-      <article class="kpi" [class]="'tone-' + k.tone">
-        <div class="kpi__top">
-          <span class="kpi__icon"><i [class]="k.icon"></i></span>
-          <span class="kpi__label">{{ k.label }}</span>
+  @if (cargando()) {
+    <div class="state">
+      <i class="pi pi-spin pi-spinner"></i>
+      <span>Cargando indicadores...</span>
+    </div>
+  } @else if (error()) {
+    <div class="state state--error">
+      <i class="pi pi-exclamation-triangle"></i>
+      <span>No se pudo cargar el resumen del sistema.</span>
+      <button class="btn btn--primary" (click)="cargar()">Reintentar</button>
+    </div>
+  } @else {
+    <!-- ===================== KPIs ===================== -->
+    <section class="kpis">
+      @for (k of kpis(); track k.label) {
+        <article class="kpi" [class]="'tone-' + k.tone" (click)="router.navigate([k.link])">
+          <div class="kpi__top">
+            <span class="kpi__icon"><i [class]="k.icon"></i></span>
+            <span class="kpi__label">{{ k.label }}</span>
+          </div>
+          <p class="kpi__valor">{{ k.valor }}</p>
+          <div class="kpi__foot">
+            <span class="kpi__link">Ver detalle <i class="pi pi-arrow-right"></i></span>
+          </div>
+        </article>
+      }
+    </section>
+
+    <!-- ===================== Fila media ===================== -->
+    <section class="row row--mid">
+      <!-- Resumen por ruta -->
+      <article class="card">
+        <header class="card__head">
+          <h2><i class="pi pi-map-marker"></i> Resumen por ruta</h2>
+        </header>
+        <div class="card__body">
+          @if (rutas().length === 0) {
+            <p class="empty">No hay rutas activas registradas.</p>
+          } @else {
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Ruta</th>
+                  <th>Responsable</th>
+                  <th>Clientes</th>
+                  <th>Progreso</th>
+                  <th>Recaudo de hoy</th>
+                  <th>Estado</th>
+                </tr>
+              </thead>
+              <tbody>
+                @for (r of rutas(); track r.ruta_id) {
+                  <tr (click)="irRuta(r)">
+                    <td>
+                      <div class="cell-stack">
+                        <strong>{{ r.ruta }}</strong>
+                        <span>{{ r.zona || 'Sin zona' }}</span>
+                      </div>
+                    </td>
+                    <td>{{ r.trabajador || 'Sin asignar' }}</td>
+                    <td class="num">{{ r.clientes }}</td>
+                    <td>
+                      <div class="progress">
+                        <div class="progress__track">
+                          <span class="progress__fill" [style.width.%]="r.progreso"></span>
+                        </div>
+                        <em>{{ r.progreso }}%</em>
+                      </div>
+                    </td>
+                    <td class="num">$ {{ r.total_recaudado | number: '1.0-0' }}</td>
+                    <td>
+                      <span class="badge" [class]="estadoClase(r.estado)">
+                        {{ estadoLabel(r.estado) }}
+                      </span>
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          }
         </div>
-        <p class="kpi__valor">{{ k.valor }}</p>
-        <div class="kpi__foot">
-          <span class="kpi__trend" [class.is-neg]="k.trendNegativo">{{ k.trend }}</span>
-          <svg class="kpi__spark" viewBox="0 0 88 26" fill="none" preserveAspectRatio="none">
-            <polyline
-              points="2,19 15,13 28,17 41,7 54,14 67,5 80,11 86,4"
-              stroke="currentColor"
-              stroke-width="2.2"
-              stroke-linecap="round"
-              stroke-linejoin="round"
-            />
-          </svg>
-        </div>
+        <a class="card__link" (click)="irRutas()">
+          Ver todas las rutas <i class="pi pi-arrow-right"></i>
+        </a>
       </article>
-    }
-  </section>
 
-  <!-- ===================== Fila media ===================== -->
-  <section class="row row--mid">
-    <!-- Estado de rutas -->
-    <article class="card">
-      <header class="card__head">
-        <h2><i class="pi pi-map-marker"></i> Estado de rutas</h2>
-      </header>
-      <div class="card__body">
-        <table class="table">
-          <thead>
-            <tr>
-              <th>Ruta</th>
-              <th>Responsable</th>
-              <th>Progreso</th>
-              <th>Recaudo de hoy</th>
-              <th>Estado</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (r of rutas; track r.codigo) {
-              <tr>
-                <td>
-                  <div class="cell-stack">
-                    <strong>{{ r.codigo }}</strong>
-                    <span>{{ r.nombre }}</span>
-                  </div>
-                </td>
-                <td>{{ r.responsable }}</td>
-                <td>
-                  <div class="progress">
-                    <div class="progress__track">
-                      <span class="progress__fill" [style.width.%]="r.progreso"></span>
-                    </div>
-                    <em>{{ r.progreso }}%</em>
-                  </div>
-                </td>
-                <td class="num">{{ r.recaudo }}</td>
-                <td>
-                  <span class="badge" [class.badge--done]="r.estado === 'Completada'">
-                    {{ r.estado }}
-                  </span>
-                </td>
-              </tr>
-            }
-          </tbody>
-        </table>
-      </div>
-      <a class="card__link" href="javascript:void(0)">
-        Ver todas las rutas <i class="pi pi-arrow-right"></i>
-      </a>
-    </article>
-
-    <!-- Recaudo esperado vs real -->
-    <article class="card">
-      <header class="card__head">
-        <h2>Recaudo esperado vs real</h2>
-        <span class="mini-select">Hoy <i class="pi pi-angle-down"></i></span>
-      </header>
-      <div class="card__body">
-        <div class="legend">
-          <span class="legend__item"><i class="dash"></i> Esperado</span>
-          <span class="legend__item"><i class="solid"></i> Recaudo real</span>
-        </div>
-        <div class="recaudo">
-          <div class="recaudo__chart">
-            <p-chart type="line" [data]="lineData" [options]="lineOptions" />
+      <!-- Recaudo esperado vs real -->
+      <article class="card">
+        <header class="card__head">
+          <h2>Recaudo esperado vs real</h2>
+          <span class="mini-select">Hoy</span>
+        </header>
+        <div class="card__body">
+          <div class="legend">
+            <span class="legend__item"><i class="solid solid--gray"></i> Esperado</span>
+            <span class="legend__item"><i class="solid"></i> Recaudo real</span>
           </div>
-          <ul class="recaudo__stats">
-            @for (s of recaudoStats; track s.label) {
-              <li>
-                <span>{{ s.label }}</span>
-                <strong>{{ s.valor }}</strong>
-              </li>
-            }
-          </ul>
-        </div>
-      </div>
-    </article>
-  </section>
-
-  <!-- ===================== Fila inferior ===================== -->
-  <section class="row row--bot">
-    <!-- Pagos recientes -->
-    <article class="card">
-      <header class="card__head">
-        <h2><i class="pi pi-credit-card"></i> Pagos recientes</h2>
-      </header>
-      <div class="card__body">
-        <table class="table">
-          <thead>
-            <tr>
-              <th>#</th>
-              <th>Fecha</th>
-              <th>Cliente</th>
-              <th>Préstamo</th>
-              <th>Ruta</th>
-              <th>Método de pago</th>
-              <th>Valor</th>
-              <th>Estado</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (p of pagos; track p.n) {
-              <tr>
-                <td class="muted">{{ p.n }}</td>
-                <td class="muted">{{ p.fecha }}</td>
-                <td><strong>{{ p.cliente }}</strong></td>
-                <td>{{ p.prestamo }}</td>
-                <td>{{ p.ruta }}</td>
-                <td>{{ p.metodo }}</td>
-                <td class="num">{{ p.valor }}</td>
-                <td><span class="badge badge--done">Aprobado</span></td>
-              </tr>
-            }
-          </tbody>
-        </table>
-      </div>
-      <a class="card__link" href="javascript:void(0)">
-        Ver todos los pagos <i class="pi pi-arrow-right"></i>
-      </a>
-    </article>
-
-    <!-- Mora por días de atraso -->
-    <article class="card">
-      <header class="card__head">
-        <h2><i class="pi pi-calendar"></i> Mora por días de atraso</h2>
-      </header>
-      <div class="card__body">
-        <div class="mora">
-          <div class="mora__chart">
-            <p-chart type="doughnut" [data]="donutData" [options]="donutOptions" />
+          <div class="recaudo">
+            <div class="recaudo__chart">
+              @if (rutas().length > 0) {
+                <p-chart type="bar" [data]="barData()" [options]="barOptions" />
+              } @else {
+                <p class="empty">Sin datos de recaudo del día.</p>
+              }
+            </div>
+            <ul class="recaudo__stats">
+              @for (s of recaudoStats(); track s.label) {
+                <li>
+                  <span>{{ s.label }}</span>
+                  <strong>{{ s.valor }}</strong>
+                </li>
+              }
+            </ul>
           </div>
-          <ul class="mora__legend">
-            @for (m of mora; track m.rango) {
-              <li>
-                <span class="dot" [style.background]="m.color"></span>
-                <span class="mora__rango">{{ m.rango }}</span>
-                <strong>{{ m.valor }}</strong>
-              </li>
-            }
-          </ul>
         </div>
-      </div>
-      <a class="card__link" href="javascript:void(0)">
-        Ver detalle de mora <i class="pi pi-arrow-right"></i>
-      </a>
-    </article>
-  </section>
+        <a class="card__link" (click)="irPagos()">
+          Ver todos los pagos <i class="pi pi-arrow-right"></i>
+        </a>
+      </article>
+    </section>
+  }
 </div>

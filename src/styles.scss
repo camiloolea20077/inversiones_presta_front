@@ -21,3 +21,21 @@ body {
   font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
   color: var(--cd-ink);
 }
+
+/* ===================== Diálogos (PrimeNG p-dialog) =====================
+   El tema base deja las secciones del diálogo sin espaciado y el contenido
+   queda pegado al borde. Estas reglas (fuera de capas) dan un padding
+   uniforme a todos los modales del sistema. */
+.p-dialog {
+  .p-dialog-header {
+    padding: 1.15rem 1.45rem 0.9rem;
+  }
+
+  .p-dialog-content {
+    padding: 0.35rem 1.45rem 1.25rem;
+  }
+
+  .p-dialog-footer {
+    padding: 0.9rem 1.45rem 1.15rem;
+  }
+}

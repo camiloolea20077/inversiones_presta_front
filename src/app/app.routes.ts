@@ -58,10 +58,34 @@ export const routes: Routes = [
             (m) => m.PrestamosComponent,
           ),
       },
-      { path: 'pagos', loadComponent: placeholder },
-      { path: 'caja', loadComponent: placeholder },
-      { path: 'mora', loadComponent: placeholder },
-      { path: 'auditoria', loadComponent: placeholder },
+      {
+        path: 'pagos',
+        loadComponent: () =>
+          import('./features/admin/pagos/pagos.component').then(
+            (m) => m.PagosComponent,
+          ),
+      },
+      {
+        path: 'caja',
+        loadComponent: () =>
+          import('./features/admin/caja/caja.component').then(
+            (m) => m.CajaComponent,
+          ),
+      },
+      {
+        path: 'mora',
+        loadComponent: () =>
+          import('./features/admin/mora/mora.component').then(
+            (m) => m.MoraComponent,
+          ),
+      },
+      {
+        path: 'auditoria',
+        loadComponent: () =>
+          import('./features/admin/auditoria/auditoria.component').then(
+            (m) => m.AuditoriaComponent,
+          ),
+      },
       { path: 'configuracion', loadComponent: placeholder },
     ],
   },
@@ -69,10 +93,23 @@ export const routes: Routes = [
     path: 'trabajador',
     canActivate: [authGuard],
     data: { roles: ['TRABAJADOR'] },
-    loadComponent: () =>
-      import('./features/trabajador/ruta-diaria/ruta-diaria.component').then(
-        (m) => m.RutaDiariaComponent,
-      ),
+    children: [
+      { path: '', pathMatch: 'full', redirectTo: 'ruta' },
+      {
+        path: 'ruta',
+        loadComponent: () =>
+          import('./features/trabajador/ruta-diaria/ruta-diaria.component').then(
+            (m) => m.RutaDiariaComponent,
+          ),
+      },
+      {
+        path: 'caja',
+        loadComponent: () =>
+          import('./features/trabajador/caja-trabajador/caja-trabajador.component').then(
+            (m) => m.CajaTrabajadorComponent,
+          ),
+      },
+    ],
   },
   { path: '', pathMatch: 'full', redirectTo: 'login' },
   { path: '**', redirectTo: 'login' },

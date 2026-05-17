@@ -1,0 +1,168 @@
+<div class="mora">
+  <!-- ===================== Listado ===================== -->
+  <section class="card">
+    <header class="card__head">
+      <h2>Clientes con cartera vencida</h2>
+
+      <div class="filtros">
+        <div class="field-search">
+          <i class="pi pi-search"></i>
+          <input
+            type="text"
+            placeholder="Buscar por cliente o trabajador…"
+            [(ngModel)]="search"
+            (keyup.enter)="buscar()"
+          />
+        </div>
+
+        <label class="select">
+          <span>Ruta</span>
+          <select [(ngModel)]="filtroRuta" (ngModelChange)="aplicarFiltro()">
+            <option value="">Todas</option>
+            @for (r of rutas(); track r.id) {
+              <option [value]="r.id">{{ r.nombre }}</option>
+            }
+          </select>
+        </label>
+
+        <label class="select">
+          <span>Trabajador</span>
+          <select
+            [(ngModel)]="filtroTrabajador"
+            (ngModelChange)="aplicarFiltro()"
+          >
+            <option value="">Todos</option>
+            @for (t of trabajadores(); track t.id) {
+              <option [value]="t.id">{{ t.nombre }}</option>
+            }
+          </select>
+        </label>
+
+        <label class="select select--num">
+          <span>Días mora (desde)</span>
+          <input
+            type="number"
+            min="0"
+            placeholder="0"
+            [(ngModel)]="filtroDiasDesde"
+            (keyup.enter)="aplicarFiltro()"
+          />
+        </label>
+
+        <label class="select select--num">
+          <span>Días mora (hasta)</span>
+          <input
+            type="number"
+            min="0"
+            placeholder="—"
+            [(ngModel)]="filtroDiasHasta"
+            (keyup.enter)="aplicarFiltro()"
+          />
+        </label>
+
+        <button type="button" class="btn btn--primary" (click)="aplicarFiltro()">
+          <i class="pi pi-filter"></i> Aplicar
+        </button>
+
+        <button type="button" class="btn btn--ghost" (click)="limpiarFiltros()">
+          <i class="pi pi-filter-slash"></i> Limpiar filtros
+        </button>
+      </div>
+    </header>
+
+    <div class="card__body">
+      <table class="table">
+        <thead>
+          <tr>
+            <th class="col-num">#</th>
+            <th>Cliente</th>
+            <th>Ruta</th>
+            <th>Trabajador</th>
+            <th>Cuota más vencida</th>
+            <th>Cuotas vencidas</th>
+            <th>Días de mora</th>
+            <th>Saldo vencido</th>
+            <th>Saldo pendiente</th>
+          </tr>
+        </thead>
+        <tbody>
+          @if (loading()) {
+            <tr>
+              <td colspan="9" class="estado-fila">
+                <i class="pi pi-spin pi-spinner"></i> Cargando…
+              </td>
+            </tr>
+          } @else if (rows().length === 0) {
+            <tr>
+              <td colspan="9" class="estado-fila">
+                No hay clientes en mora con los filtros seleccionados.
+              </td>
+            </tr>
+          } @else {
+            @for (m of rows(); track m.prestamo_id; let i = $index) {
+              <tr>
+                <td class="col-num muted">{{ page() * tamano + i + 1 }}</td>
+                <td>
+                  <div class="cliente">
+                    <span class="avatar">{{ iniciales(m.cliente) }}</span>
+                    <div class="cliente__txt">
+                      <strong>{{ m.cliente }}</strong>
+                      <small>{{ m.documento || 'Sin documento' }}</small>
+                    </div>
+                  </div>
+                </td>
+                <td class="muted">{{ m.ruta || '—' }}</td>
+                <td class="muted">{{ m.trabajador || '—' }}</td>
+                <td class="muted">{{ fecha(m.cuota_vencida_mas_antigua) }}</td>
+                <td class="muted">{{ m.cuotas_vencidas }}</td>
+                <td>
+                  <span class="badge mora" [class]="nivelMora(m.dias_mora)">
+                    {{ m.dias_mora }} días
+                  </span>
+                </td>
+                <td class="num num--rojo">{{ moneda(m.saldo_vencido) }}</td>
+                <td class="num">{{ moneda(m.saldo_pendiente) }}</td>
+              </tr>
+            }
+          }
+        </tbody>
+        @if (rows().length > 0 && !loading()) {
+          <tfoot>
+            <tr>
+              <td colspan="7" class="tfoot-label">
+                Saldo vencido en esta página
+              </td>
+              <td class="num num--rojo">{{ moneda(saldoVencidoPagina()) }}</td>
+              <td></td>
+            </tr>
+          </tfoot>
+        }
+      </table>
+    </div>
+
+    <footer class="paginador">
+      <span class="paginador__info">
+        Mostrando {{ rows().length }} de {{ totalElements() }} clientes en mora
+      </span>
+      <div class="paginador__nav">
+        <button
+          type="button"
+          class="icon-btn"
+          [disabled]="page() === 0"
+          (click)="irPagina(page() - 1)"
+        >
+          <i class="pi pi-chevron-left"></i>
+        </button>
+        <span class="paginador__page">{{ page() + 1 }}</span>
+        <button
+          type="button"
+          class="icon-btn"
+          [disabled]="page() + 1 >= totalPages()"
+          (click)="irPagina(page() + 1)"
+        >
+          <i class="pi pi-chevron-right"></i>
+        </button>
+      </div>
+    </footer>
+  </section>
+</div>

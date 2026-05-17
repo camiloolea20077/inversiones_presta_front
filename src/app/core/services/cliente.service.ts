@@ -7,6 +7,7 @@ import { PageableRequest, SpringPage } from '../models/trabajador.model';
 import {
   Cliente,
   ClienteComboDto,
+  ClienteDetalle,
   ClienteRequest,
   ClienteRow,
 } from '../models/cliente.model';
@@ -25,6 +26,13 @@ export class ClienteService {
   obtener(id: number): Observable<Cliente> {
     return this.http
       .get<ApiResponse<Cliente>>(`${this.baseUrl}/${id}`)
+      .pipe(map((res) => res.data));
+  }
+
+  /** Detalle completo: datos, cartera, préstamo activo e historial de pagos. */
+  detalle(id: number): Observable<ClienteDetalle> {
+    return this.http
+      .get<ApiResponse<ClienteDetalle>>(`${this.baseUrl}/${id}/detalle`)
       .pipe(map((res) => res.data));
   }
 

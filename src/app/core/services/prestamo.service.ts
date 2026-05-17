@@ -5,6 +5,8 @@ import { environment } from '../../../environments/environment';
 import { ApiResponse } from '../models/auth.model';
 import { PageableRequest, SpringPage } from '../models/trabajador.model';
 import {
+  ClienteConPrestamo,
+  ClienteConPrestamoRequest,
   Prestamo,
   PrestamoRequest,
   PrestamoRow,
@@ -38,6 +40,13 @@ export class PrestamoService {
   simular(dto: SimulacionRequest): Observable<Simulacion> {
     return this.http
       .post<ApiResponse<Simulacion>>(`${this.baseUrl}/simular`, dto)
+      .pipe(map((res) => res.data));
+  }
+
+  /** Crea cliente nuevo + préstamo en una sola operación transaccional. */
+  crearClienteConPrestamo(dto: ClienteConPrestamoRequest): Observable<ClienteConPrestamo> {
+    return this.http
+      .post<ApiResponse<ClienteConPrestamo>>(`${this.baseUrl}/cliente-nuevo`, dto)
       .pipe(map((res) => res.data));
   }
 }

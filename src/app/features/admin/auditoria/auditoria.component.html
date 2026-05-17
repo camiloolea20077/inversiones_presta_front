@@ -1,0 +1,220 @@
+<div class="auditoria">
+  <!-- ===================== Listado ===================== -->
+  <section class="card">
+    <header class="card__head">
+      <h2>Eventos del sistema</h2>
+
+      <div class="filtros">
+        <div class="field-search">
+          <i class="pi pi-search"></i>
+          <input
+            type="text"
+            placeholder="Buscar por usuario, acción u observación…"
+            [(ngModel)]="search"
+            (keyup.enter)="buscar()"
+          />
+        </div>
+
+        <label class="select">
+          <span>Usuario</span>
+          <select [(ngModel)]="filtroUsuario" (ngModelChange)="aplicarFiltro()">
+            <option value="">Todos</option>
+            @for (u of usuarios(); track u.id) {
+              <option [value]="u.id">{{ u.nombre }}</option>
+            }
+          </select>
+        </label>
+
+        <label class="select">
+          <span>Acción</span>
+          <select [(ngModel)]="filtroAccion" (ngModelChange)="aplicarFiltro()">
+            <option value="">Todas</option>
+            @for (a of acciones; track a) {
+              <option [value]="a">{{ accionLabel(a) }}</option>
+            }
+          </select>
+        </label>
+
+        <label class="select">
+          <span>Fecha</span>
+          <input
+            type="date"
+            [(ngModel)]="filtroFecha"
+            (ngModelChange)="aplicarFiltro()"
+          />
+        </label>
+
+        <button type="button" class="btn btn--primary" (click)="aplicarFiltro()">
+          <i class="pi pi-filter"></i> Aplicar
+        </button>
+
+        <button type="button" class="btn btn--ghost" (click)="limpiarFiltros()">
+          <i class="pi pi-filter-slash"></i> Limpiar filtros
+        </button>
+      </div>
+    </header>
+
+    <div class="card__body">
+      <table class="table">
+        <thead>
+          <tr>
+            <th class="col-num">#</th>
+            <th>Fecha y hora</th>
+            <th>Usuario</th>
+            <th>Acción</th>
+            <th>Tabla afectada</th>
+            <th>Registro</th>
+            <th>Observación</th>
+            <th class="col-acc"></th>
+          </tr>
+        </thead>
+        <tbody>
+          @if (loading()) {
+            <tr>
+              <td colspan="8" class="estado-fila">
+                <i class="pi pi-spin pi-spinner"></i> Cargando…
+              </td>
+            </tr>
+          } @else if (rows().length === 0) {
+            <tr>
+              <td colspan="8" class="estado-fila">
+                No hay eventos de auditoría con los filtros seleccionados.
+              </td>
+            </tr>
+          } @else {
+            @for (e of rows(); track e.id; let i = $index) {
+              <tr>
+                <td class="col-num muted">{{ page() * tamano + i + 1 }}</td>
+                <td class="muted">{{ fechaHora(e.fecha) }}</td>
+                <td>
+                  <div class="usuario">
+                    <span class="avatar">{{ iniciales(e.usuario) }}</span>
+                    <strong>{{ e.usuario || 'Sistema' }}</strong>
+                  </div>
+                </td>
+                <td>
+                  <span class="badge" [class]="accionBadge(e.accion)">
+                    {{ accionLabel(e.accion) }}
+                  </span>
+                </td>
+                <td class="muted">{{ e.tabla_afectada }}</td>
+                <td class="muted">
+                  {{ e.registro_id ? ('#' + e.registro_id) : '—' }}
+                </td>
+                <td class="obs">{{ e.observacion || '—' }}</td>
+                <td class="col-acc">
+                  <button
+                    type="button"
+                    class="icon-btn"
+                    title="Ver detalle"
+                    (click)="verDetalle(e)"
+                  >
+                    <i class="pi pi-eye"></i>
+                  </button>
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <footer class="paginador">
+      <span class="paginador__info">
+        Mostrando {{ rows().length }} de {{ totalElements() }} eventos
+      </span>
+      <div class="paginador__nav">
+        <button
+          type="button"
+          class="icon-btn"
+          [disabled]="page() === 0"
+          (click)="irPagina(page() - 1)"
+        >
+          <i class="pi pi-chevron-left"></i>
+        </button>
+        <span class="paginador__page">{{ page() + 1 }}</span>
+        <button
+          type="button"
+          class="icon-btn"
+          [disabled]="page() + 1 >= totalPages()"
+          (click)="irPagina(page() + 1)"
+        >
+          <i class="pi pi-chevron-right"></i>
+        </button>
+      </div>
+    </footer>
+  </section>
+</div>
+
+<!-- ===================== Diálogo detalle del evento ===================== -->
+<p-dialog
+  [visible]="dialogVisible()"
+  (visibleChange)="dialogVisible.set($event)"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: '620px' }"
+  header="Detalle del evento"
+>
+  @if (detalle(); as d) {
+    <div class="detalle">
+      <div class="detalle__top">
+        <div>
+          <span class="detalle__label">Evento #{{ d.id }}</span>
+          <strong class="detalle__valor">{{ accionLabel(d.accion) }}</strong>
+        </div>
+        <span class="badge" [class]="accionBadge(d.accion)">{{ d.accion }}</span>
+      </div>
+
+      <div class="resumen">
+        <div class="resumen__item">
+          <span>Fecha y hora</span><strong>{{ fechaHora(d.fecha) }}</strong>
+        </div>
+        <div class="resumen__item">
+          <span>Usuario</span><strong>{{ d.usuario || 'Sistema' }}</strong>
+        </div>
+        <div class="resumen__item">
+          <span>Tabla afectada</span><strong>{{ d.tabla_afectada }}</strong>
+        </div>
+        <div class="resumen__item">
+          <span>Registro afectado</span>
+          <strong>{{ d.registro_id ? ('#' + d.registro_id) : '—' }}</strong>
+        </div>
+      </div>
+
+      @if (d.observacion) {
+        <h4 class="subtitulo">Observación</h4>
+        <p class="observacion">{{ d.observacion }}</p>
+      }
+
+      @if (tieneValores(d)) {
+        <h4 class="subtitulo">Cambios del registro</h4>
+        <div class="valores">
+          <div class="valores__col">
+            <span class="valores__label">Valor anterior</span>
+            <pre class="json">{{ formatearJson(d.valor_anterior) }}</pre>
+          </div>
+          <div class="valores__col">
+            <span class="valores__label">Valor nuevo</span>
+            <pre class="json">{{ formatearJson(d.valor_nuevo) }}</pre>
+          </div>
+        </div>
+      } @else {
+        <p class="sin-valores">
+          Este evento no registró un cambio de valores comparables.
+        </p>
+      }
+    </div>
+  } @else {
+    <div class="panel__vacio">
+      <i class="pi pi-history"></i>
+      <p>No se encontró el detalle del evento.</p>
+    </div>
+  }
+
+  <div class="form__actions">
+    <button type="button" class="btn btn--ghost" (click)="dialogVisible.set(false)">
+      Cerrar
+    </button>
+  </div>
+</p-dialog>

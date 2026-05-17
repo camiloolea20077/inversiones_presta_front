@@ -32,7 +32,15 @@
             <option value="ACTIVO">Activos</option>
             <option value="BLOQUEADO">Bloqueados</option>
             <option value="RETIRADO">Retirados</option>
-            <option value="EN_MORA">En mora</option>
+          </select>
+        </label>
+
+        <label class="select">
+          <span>Préstamo</span>
+          <select [(ngModel)]="filtroPrestamo" (ngModelChange)="aplicarFiltro()">
+            <option value="">Todos</option>
+            <option value="SI">Con préstamo activo</option>
+            <option value="NO">Sin préstamo</option>
           </select>
         </label>
 
@@ -48,10 +56,11 @@
           <tr>
             <th class="col-num">#</th>
             <th>Cliente</th>
-            <th>Documento</th>
             <th>Teléfono</th>
             <th>Barrio</th>
             <th>Ruta</th>
+            <th>Préstamo activo</th>
+            <th>Mora</th>
             <th>Estado</th>
             <th class="col-acciones">Acciones</th>
           </tr>
@@ -59,13 +68,13 @@
         <tbody>
           @if (loading()) {
             <tr>
-              <td colspan="8" class="estado-fila">
+              <td colspan="9" class="estado-fila">
                 <i class="pi pi-spin pi-spinner"></i> Cargando…
               </td>
             </tr>
           } @else if (rows().length === 0) {
             <tr>
-              <td colspan="8" class="estado-fila">No hay clientes registrados.</td>
+              <td colspan="9" class="estado-fila">No hay clientes registrados.</td>
             </tr>
           } @else {
             @for (c of rows(); track c.id; let i = $index) {
@@ -77,10 +86,12 @@
                 <td>
                   <div class="persona">
                     <span class="avatar avatar--sm">{{ iniciales(c.nombre) }}</span>
-                    <strong>{{ c.nombre }}</strong>
+                    <div class="persona__txt">
+                      <strong>{{ c.nombre }}</strong>
+                      <small>{{ c.documento || 'Sin documento' }}</small>
+                    </div>
                   </div>
                 </td>
-                <td class="num">{{ c.documento || '—' }}</td>
                 <td class="muted">{{ c.telefono || '—' }}</td>
                 <td class="muted">{{ c.barrio || '—' }}</td>
                 <td>
@@ -88,6 +99,22 @@
                     <span class="ruta-tag">{{ c.ruta }}</span>
                   } @else {
                     <span class="muted">Sin ruta</span>
+                  }
+                </td>
+                <td>
+                  @if (c.prestamo_activo != null) {
+                    <strong class="monto">{{ moneda(c.prestamo_activo) }}</strong>
+                  } @else {
+                    <span class="muted">—</span>
+                  }
+                </td>
+                <td>
+                  @if (c.prestamos_activos) {
+                    <span class="badge mora" [class]="nivelMora(c.dias_mora)">
+                      {{ c.dias_mora ? c.dias_mora + ' días' : 'Al día' }}
+                    </span>
+                  } @else {
+                    <span class="muted">—</span>
                   }
                 </td>
                 <td>
@@ -160,58 +187,252 @@
   </section>
 
   <!-- ===================== Detalle del cliente ===================== -->
-  <section class="card panel">
-    <header class="panel__head">
-      <h3>Detalle del cliente</h3>
-    </header>
-    @if (seleccionado(); as c) {
-      <div class="panel__body">
-        <div class="persona persona--lg">
-          <span class="avatar avatar--lg">{{ iniciales(c.nombre) }}</span>
-          <div class="persona__info">
-            <strong>{{ c.nombre }}</strong>
-            <span>Cliente · registrado {{ c.fecha_registro || '—' }}</span>
-          </div>
-          <span class="badge" [class]="'badge--' + c.estado.toLowerCase()">
-            {{ c.estado }}
+  @if (detalleCargando()) {
+    <section class="card panel__estado">
+      <i class="pi pi-spin pi-spinner"></i>
+      <p>Cargando detalle del cliente…</p>
+    </section>
+  } @else if (detalle(); as d) {
+    <div class="detalle">
+      <!-- Fila A -->
+      <section class="card perfil">
+        <div class="perfil__top">
+          <span class="avatar avatar--lg">{{ iniciales(d.nombre) }}</span>
+          <strong class="perfil__nombre">{{ d.nombre }}</strong>
+          <span class="perfil__doc">{{ d.documento || 'Sin documento' }}</span>
+          <span class="badge" [class]="'badge--' + d.estado.toLowerCase()">
+            {{ d.estado }}
           </span>
         </div>
 
-        <ul class="datos">
-          <li>
-            <i class="pi pi-id-card"></i>
-            <span>Documento</span>
-            <strong>{{ c.documento || '—' }}</strong>
-          </li>
+        <div class="perfil__stats">
+          <div class="mini-stat">
+            <span>Préstamos totales</span>
+            <strong class="azul">{{ d.prestamos_totales }}</strong>
+          </div>
+          <div class="mini-stat">
+            <span>Días en mora</span>
+            <strong [class]="d.dias_mora > 0 ? 'rojo' : 'verde'">
+              {{ d.dias_mora }}
+            </strong>
+          </div>
+        </div>
+
+        <div class="perfil__acciones">
+          <button
+            type="button"
+            class="btn btn--outline"
+            (click)="editar(seleccionado()!)"
+          >
+            <i class="pi pi-pencil"></i> Editar cliente
+          </button>
+          @if (d.estado === 'ACTIVO') {
+            <button
+              type="button"
+              class="btn btn--ghost"
+              (click)="cambiarEstado(seleccionado()!, 'BLOQUEADO')"
+            >
+              <i class="pi pi-ban"></i> Bloquear
+            </button>
+          } @else {
+            <button
+              type="button"
+              class="btn btn--ghost"
+              (click)="cambiarEstado(seleccionado()!, 'ACTIVO')"
+            >
+              <i class="pi pi-check-circle"></i> Activar
+            </button>
+          }
+        </div>
+      </section>
+
+      <section class="card">
+        <header class="card__head card__head--sm">
+          <h3>Información del cliente</h3>
+        </header>
+        <div class="datos-grid">
+          <div class="dato">
+            <span>Documento</span><strong>{{ d.documento || '—' }}</strong>
+          </div>
+          <div class="dato">
+            <span>Estado</span>
+            <strong>
+              <span class="badge" [class]="'badge--' + d.estado.toLowerCase()">
+                {{ d.estado }}
+              </span>
+            </strong>
+          </div>
+          <div class="dato">
+            <span>Ruta de cobro</span><strong>{{ d.ruta || 'Sin ruta' }}</strong>
+          </div>
+          <div class="dato">
+            <span>Fecha de registro</span>
+            <strong>{{ fecha(d.fecha_registro) }}</strong>
+          </div>
+          <div class="dato dato--full">
+            <span>Observación</span>
+            <strong>{{ d.observacion || 'Sin observaciones' }}</strong>
+          </div>
+        </div>
+      </section>
+
+      <section class="card">
+        <header class="card__head card__head--sm">
+          <h3>Información de contacto</h3>
+        </header>
+        <ul class="contacto">
           <li>
             <i class="pi pi-phone"></i>
-            <span>Teléfono</span>
-            <strong>{{ c.telefono || '—' }}</strong>
-          </li>
-          <li>
-            <i class="pi pi-home"></i>
-            <span>Dirección</span>
-            <strong>{{ c.direccion || '—' }}</strong>
+            <div>
+              <span>Teléfono</span>
+              <strong>{{ d.telefono || '—' }}</strong>
+            </div>
           </li>
           <li>
             <i class="pi pi-map"></i>
-            <span>Barrio</span>
-            <strong>{{ c.barrio || '—' }}</strong>
-          </li>
-          <li>
-            <i class="pi pi-map-marker"></i>
-            <span>Ruta</span>
-            <strong>{{ c.ruta || 'Sin ruta' }}</strong>
+            <div>
+              <span>Barrio / Zona</span>
+              <strong>{{ d.barrio || '—' }}</strong>
+            </div>
           </li>
         </ul>
-      </div>
-    } @else {
-      <div class="panel__vacio">
-        <i class="pi pi-users"></i>
-        <p>Selecciona un cliente para ver su detalle.</p>
-      </div>
-    }
-  </section>
+        <div class="ubicacion">
+          <i class="pi pi-map-marker"></i>
+          <div>
+            <span>Dirección</span>
+            <strong>{{ d.direccion || 'Sin dirección registrada' }}</strong>
+          </div>
+        </div>
+      </section>
+
+      <!-- Fila B -->
+      <section class="card prestamo">
+        <header class="card__head card__head--sm">
+          <h3>Préstamo activo</h3>
+          @if (d.prestamo_activo; as p) {
+            <span class="badge" [class]="'badge--' + p.estado.toLowerCase()">
+              {{ p.estado }}
+            </span>
+          }
+        </header>
+
+        @if (d.prestamo_activo; as p) {
+          <div class="prestamo__body">
+            <div class="prestamo__stats">
+              <div class="stat">
+                <span>Monto prestado</span>
+                <strong>{{ moneda(p.monto_prestado) }}</strong>
+              </div>
+              <div class="stat">
+                <span>Tasa de interés</span>
+                <strong class="ambar">{{ p.tasa_porcentaje }}%</strong>
+              </div>
+              <div class="stat">
+                <span>Total a pagar</span>
+                <strong>{{ moneda(p.total_pagar) }}</strong>
+              </div>
+              <div class="stat">
+                <span>Cuota diaria</span>
+                <strong class="azul">{{ moneda(p.cuota_diaria) }}</strong>
+              </div>
+              <div class="stat">
+                <span>Saldo pendiente</span>
+                <strong class="rojo grande">{{ moneda(p.saldo_actual) }}</strong>
+              </div>
+              <div class="stat">
+                <span>Plazo</span>
+                <strong>{{ p.plazo_dias }} días</strong>
+              </div>
+              <div class="stat">
+                <span>Fecha inicio</span>
+                <strong>{{ fecha(p.fecha_inicio) }}</strong>
+              </div>
+              <div class="stat">
+                <span>Fecha vencimiento</span>
+                <strong>{{ fecha(p.fecha_fin) }}</strong>
+              </div>
+            </div>
+
+            <div class="progreso">
+              <div class="progreso__barra">
+                <span
+                  class="progreso__fill"
+                  [class.progreso__fill--mora]="p.dias_mora > 0"
+                  [style.width.%]="progresoPrestamo()"
+                ></span>
+              </div>
+              <div class="progreso__txt">
+                <span>{{ progresoPrestamo() }}% transcurrido</span>
+                <span>
+                  Cuotas {{ p.cuotas_pagadas }} / {{ p.cuotas_total }}
+                  · día {{ p.dias_transcurridos }} de {{ p.plazo_dias }}
+                </span>
+              </div>
+            </div>
+          </div>
+        } @else {
+          <div class="vacio">
+            <i class="pi pi-wallet"></i>
+            <p>Este cliente no tiene un préstamo activo.</p>
+          </div>
+        }
+      </section>
+
+      <section class="card historial">
+        <header class="card__head card__head--sm">
+          <h3>Historial de pagos</h3>
+        </header>
+
+        @if (d.pagos_recientes.length > 0) {
+          <ul class="pagos">
+            @for (pg of d.pagos_recientes; track pg.id) {
+              <li>
+                <div class="pagos__izq">
+                  <strong class="verde">{{ moneda(pg.valor_pago) }}</strong>
+                  <small>{{ fechaHora(pg.fecha_pago) }}</small>
+                </div>
+                <div class="pagos__der">
+                  <span class="chip">{{ pg.forma_pago }}</span>
+                  <span class="badge" [class]="'badge--' + pg.estado.toLowerCase()">
+                    {{ pg.estado }}
+                  </span>
+                </div>
+              </li>
+            }
+          </ul>
+        } @else {
+          <div class="vacio vacio--sm">
+            <i class="pi pi-inbox"></i>
+            <p>Sin pagos registrados.</p>
+          </div>
+        }
+
+        <div class="historial__kpis">
+          <div class="kpi">
+            <span>Total pagado</span>
+            <strong class="verde">{{ moneda(d.total_pagado) }}</strong>
+          </div>
+          <div class="kpi">
+            <span>Cuotas pagadas</span>
+            <strong class="azul">
+              {{ d.cuotas_pagadas }} / {{ d.cuotas_totales }}
+            </strong>
+          </div>
+          <div class="kpi">
+            <span>Días en mora</span>
+            <strong [class]="d.dias_mora > 0 ? 'rojo' : 'verde'">
+              {{ d.dias_mora }}
+            </strong>
+          </div>
+        </div>
+      </section>
+    </div>
+  } @else {
+    <section class="card panel__estado">
+      <i class="pi pi-users"></i>
+      <p>Selecciona un cliente para ver su detalle.</p>
+    </section>
+  }
 </div>
 
 <!-- ===================== Diálogo crear / editar ===================== -->

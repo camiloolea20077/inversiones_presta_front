@@ -106,13 +106,22 @@
                   </button>
                 }
               </div>
+
+              <button
+                type="button"
+                class="tarjeta__agregar"
+                (click)="abrirAgregarCliente(d)"
+                title="Agregar un cliente nuevo después de este"
+              >
+                <i class="pi pi-user-plus"></i> Agregar cliente cerca
+              </button>
             </article>
           }
         </section>
       }
 
-      <button type="button" class="btn btn--bloque" (click)="agregarCliente()">
-        <i class="pi pi-plus"></i> Agregar cliente cerca
+      <button type="button" class="btn btn--bloque" (click)="abrirAgregarCliente(null)">
+        <i class="pi pi-plus"></i> Agregar cliente al final de la ruta
       </button>
     }
   </main>
@@ -122,14 +131,14 @@
     <button type="button" class="navinf__item is-active">
       <i class="pi pi-map"></i><span>Ruta del día</span>
     </button>
-    <button type="button" class="navinf__item" (click)="cargar()">
-      <i class="pi pi-refresh"></i><span>Actualizar</span>
+    <button type="button" class="navinf__item" (click)="irACaja()">
+      <i class="pi pi-wallet"></i><span>Mi caja</span>
     </button>
-    <button type="button" class="navinf__item" (click)="agregarCliente()">
-      <i class="pi pi-users"></i><span>Clientes</span>
+    <button type="button" class="navinf__item" (click)="abrirAgregarCliente(null)">
+      <i class="pi pi-user-plus"></i><span>Nuevo</span>
     </button>
     <button type="button" class="navinf__item" (click)="cerrarSesion()">
-      <i class="pi pi-cog"></i><span>Más</span>
+      <i class="pi pi-sign-out"></i><span>Salir</span>
     </button>
   </nav>
 </div>
@@ -209,4 +218,166 @@
       </div>
     </div>
   }
+</p-dialog>
+
+<!-- ============ Diálogo: agregar cliente cerca (HU-FE-009) ============ -->
+<p-dialog
+  [visible]="dialogClienteVisible()"
+  (visibleChange)="dialogClienteVisible.set($event)"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [dismissableMask]="true"
+  [style]="{ width: '94vw', maxWidth: '440px' }"
+  header="Agregar cliente cerca"
+>
+  <div class="nuevo">
+    <!-- Indicación: después de qué cliente y nuevo orden -->
+    <div class="nuevo__ubicacion">
+      <i class="pi pi-map-marker"></i>
+      <div>
+        @if (clienteBase(); as base) {
+          <span>Se agregará después de</span>
+          <strong>{{ ordenTexto(base.orden) }} · {{ base.clienteNombre }}</strong>
+        } @else {
+          <span>Se agregará</span>
+          <strong>Al final de la ruta</strong>
+        }
+      </div>
+      <span class="nuevo__orden" title="Nuevo orden calculado">
+        Orden {{ ordenTexto(nuevoOrden()) }}
+      </span>
+    </div>
+
+    <!-- Pasos -->
+    <div class="nuevo__pasos">
+      <span class="nuevo__paso" [class.is-on]="pasoCliente() >= 1">1 · Cliente</span>
+      <span class="nuevo__sep"></span>
+      <span class="nuevo__paso" [class.is-on]="pasoCliente() >= 2">2 · Préstamo</span>
+    </div>
+
+    <!-- ===== Paso 1: datos del cliente ===== -->
+    @if (pasoCliente() === 1) {
+      <form class="pago-form" [formGroup]="formCliente">
+        <div class="campo">
+          <label>Nombre del cliente *</label>
+          <input type="text" formControlName="nombre" placeholder="Nombre completo" />
+        </div>
+        <div class="nuevo__fila">
+          <div class="campo">
+            <label>Documento</label>
+            <input type="text" formControlName="documento" />
+          </div>
+          <div class="campo">
+            <label>Teléfono</label>
+            <input type="text" formControlName="telefono" />
+          </div>
+        </div>
+        <div class="campo">
+          <label>Dirección</label>
+          <input type="text" formControlName="direccion" />
+        </div>
+        <div class="campo">
+          <label>Barrio</label>
+          <input type="text" formControlName="barrio" />
+        </div>
+        <div class="campo">
+          <label>Observación</label>
+          <textarea rows="2" formControlName="observacionCliente"
+            placeholder="Nota del cliente"></textarea>
+        </div>
+      </form>
+
+      <div class="pago-acciones">
+        <button type="button" class="btn btn--ghost gris"
+          (click)="dialogClienteVisible.set(false)">
+          Cancelar
+        </button>
+        <button type="button" class="btn btn--primary" (click)="continuarAPrestamo()">
+          Continuar <i class="pi pi-arrow-right"></i>
+        </button>
+      </div>
+    }
+
+    <!-- ===== Paso 2: datos del préstamo ===== -->
+    @if (pasoCliente() === 2) {
+      <form class="pago-form" [formGroup]="formPrestamo">
+        <div class="nuevo__fila">
+          <div class="campo">
+            <label>Monto a prestar *</label>
+            <input type="number" min="0" formControlName="montoPrestado" />
+          </div>
+          <div class="campo">
+            <label>Tasa (%) *</label>
+            <input type="number" min="0" step="0.1" formControlName="tasaPorcentaje" />
+          </div>
+        </div>
+        <div class="nuevo__fila">
+          <div class="campo">
+            <label>Plazo (días) *</label>
+            <input type="number" min="1" formControlName="plazoDias" />
+          </div>
+          <div class="campo">
+            <label>Tipo de interés *</label>
+            <select formControlName="tipoInteres">
+              @for (t of tiposInteres; track t) {
+                <option [value]="t">{{ t }}</option>
+              }
+            </select>
+          </div>
+        </div>
+        <div class="campo">
+          <label>Observación</label>
+          <textarea rows="2" formControlName="observacionPrestamo"
+            placeholder="Nota del préstamo"></textarea>
+        </div>
+      </form>
+
+      <!-- Simulación del préstamo (HU-FE-010): se actualiza automáticamente -->
+      <div class="nuevo__sim-cab">
+        <span><i class="pi pi-calculator"></i> Simulación del préstamo</span>
+        @if (simulando()) {
+          <i class="pi pi-spin pi-spinner"></i>
+        }
+      </div>
+      @if (simulacion(); as s) {
+        <div class="nuevo__sim">
+          <div>
+            <span>Valor prestado</span>
+            <strong>{{ moneda(s.montoPrestado) }}</strong>
+          </div>
+          <div>
+            <span>Interés</span>
+            <strong>{{ moneda(s.valorInteres) }}</strong>
+          </div>
+          <div>
+            <span>Total a pagar</span>
+            <strong>{{ moneda(s.totalPagar) }}</strong>
+          </div>
+          <div>
+            <span>Cuota diaria</span>
+            <strong>{{ moneda(s.cuotaDiaria) }}</strong>
+          </div>
+        </div>
+      } @else {
+        <p class="nuevo__sim-vacio">
+          Completa monto, tasa y plazo para ver la simulación.
+        </p>
+      }
+
+      <div class="pago-acciones">
+        <button type="button" class="btn btn--ghost gris"
+          [disabled]="guardandoCliente()" (click)="volverACliente()">
+          <i class="pi pi-arrow-left"></i> Atrás
+        </button>
+        <button type="button" class="btn btn--primary"
+          [disabled]="guardandoCliente()" (click)="guardarClienteConPrestamo()">
+          @if (guardandoCliente()) {
+            <i class="pi pi-spin pi-spinner"></i>
+          }
+          Guardar
+        </button>
+      </div>
+    }
+  </div>
 </p-dialog>

@@ -11,7 +11,11 @@ import { DialogModule } from 'primeng/dialog';
 import { LayoutService } from '../../../core/services/layout.service';
 import { ClienteService } from '../../../core/services/cliente.service';
 import { RutaService } from '../../../core/services/ruta.service';
-import { ClienteRequest, ClienteRow } from '../../../core/models/cliente.model';
+import {
+  ClienteDetalle,
+  ClienteRequest,
+  ClienteRow,
+} from '../../../core/models/cliente.model';
 import { RutaComboDto } from '../../../core/models/ruta.model';
 import { PageableRequest } from '../../../core/models/trabajador.model';
 
@@ -40,9 +44,14 @@ export class ClientesComponent implements OnInit {
   search = '';
   filtroEstado = '';
   filtroRuta = '';
+  filtroPrestamo = '';
 
   readonly rutas = signal<RutaComboDto[]>([]);
   readonly seleccionado = signal<ClienteRow | null>(null);
+
+  /** ===== Detalle del cliente ===== */
+  readonly detalle = signal<ClienteDetalle | null>(null);
+  readonly detalleCargando = signal(false);
 
   readonly estados = ['ACTIVO', 'BLOQUEADO', 'RETIRADO'];
 
@@ -54,6 +63,15 @@ export class ClientesComponent implements OnInit {
   readonly tituloDialogo = computed(() =>
     this.editandoId() ? 'Editar cliente' : 'Nuevo cliente',
   );
+
+  /** Porcentaje de avance del préstamo activo según días transcurridos. */
+  readonly progresoPrestamo = computed(() => {
+    const p = this.detalle()?.prestamo_activo;
+    if (!p || !p.plazo_dias) {
+      return 0;
+    }
+    return Math.min(100, Math.round((p.dias_transcurridos / p.plazo_dias) * 100));
+  });
 
   readonly formCliente: FormGroup = this.fb.group({
     nombre: ['', [Validators.required, Validators.maxLength(150)]],
@@ -67,8 +85,8 @@ export class ClientesComponent implements OnInit {
 
   ngOnInit(): void {
     this.layout.configurar(
-      'Gestión de Clientes',
-      'Administra los clientes, su estado y su ruta de cobro',
+      'Clientes y Préstamos',
+      'Gestión de clientes y cartera activa',
       { label: 'Nuevo cliente', icon: 'pi pi-plus', run: () => this.nuevo() },
     );
     this.cargar();
@@ -87,6 +105,9 @@ export class ClientesComponent implements OnInit {
     }
     if (this.filtroRuta) {
       params['rutaId'] = this.filtroRuta;
+    }
+    if (this.filtroPrestamo) {
+      params['conPrestamo'] = this.filtroPrestamo;
     }
     const request: PageableRequest = {
       page: this.page(),
@@ -119,6 +140,7 @@ export class ClientesComponent implements OnInit {
     this.search = '';
     this.filtroEstado = '';
     this.filtroRuta = '';
+    this.filtroPrestamo = '';
     this.buscar();
   }
 
@@ -136,18 +158,37 @@ export class ClientesComponent implements OnInit {
 
   seleccionar(row: ClienteRow): void {
     this.seleccionado.set(row);
+    this.cargarDetalle(row.id);
+  }
+
+  private cargarDetalle(id: number): void {
+    this.detalleCargando.set(true);
+    this.detalle.set(null);
+    this.service.detalle(id).subscribe({
+      next: (d) => {
+        this.detalle.set(d);
+        this.detalleCargando.set(false);
+      },
+      error: (err) => {
+        this.detalleCargando.set(false);
+        this.error(err, 'No se pudo cargar el detalle del cliente');
+      },
+    });
   }
 
   private sincronizarSeleccion(content: ClienteRow[]): void {
     if (content.length === 0) {
       this.seleccionado.set(null);
+      this.detalle.set(null);
       return;
     }
     const actual = this.seleccionado();
     const refrescado = actual
       ? content.find((c) => c.id === actual.id)
       : undefined;
-    this.seleccionado.set(refrescado ?? content[0]);
+    const elegido = refrescado ?? content[0];
+    this.seleccionado.set(elegido);
+    this.cargarDetalle(elegido.id);
   }
 
   /** ===== Crear / editar ===== */
@@ -237,6 +278,61 @@ export class ClientesComponent implements OnInit {
     const primera = partes[0]?.charAt(0) ?? '';
     const segunda = partes.length > 1 ? partes[partes.length - 1].charAt(0) : '';
     return (primera + segunda).toUpperCase();
+  }
+
+  moneda(valor: number | null | undefined): string {
+    return new Intl.NumberFormat('es-CO', {
+      style: 'currency',
+      currency: 'COP',
+      maximumFractionDigits: 0,
+    }).format(valor ?? 0);
+  }
+
+  fecha(valor: string | null | undefined): string {
+    if (!valor) {
+      return '—';
+    }
+    const d = new Date(valor);
+    if (Number.isNaN(d.getTime())) {
+      return valor;
+    }
+    return d.toLocaleDateString('es-CO', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+    });
+  }
+
+  fechaHora(valor: string | null | undefined): string {
+    if (!valor) {
+      return '—';
+    }
+    const d = new Date(valor);
+    if (Number.isNaN(d.getTime())) {
+      return valor;
+    }
+    return d.toLocaleString('es-CO', {
+      day: '2-digit',
+      month: '2-digit',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  }
+
+  /** Clase del badge de mora según los días de atraso. */
+  nivelMora(dias: number | null | undefined): string {
+    const d = dias ?? 0;
+    if (d <= 0) {
+      return 'mora--ok';
+    }
+    if (d >= 30) {
+      return 'mora--alta';
+    }
+    if (d >= 8) {
+      return 'mora--media';
+    }
+    return 'mora--baja';
   }
 
   campoInvalido(campo: string): boolean {

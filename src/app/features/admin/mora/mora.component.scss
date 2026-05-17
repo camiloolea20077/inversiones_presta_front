@@ -1,0 +1,353 @@
+:host {
+  display: block;
+}
+
+.mora {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+/* ===================== Card base ===================== */
+.card {
+  background: #fff;
+  border: 1px solid var(--cd-border);
+  border-radius: 14px;
+  display: flex;
+  flex-direction: column;
+
+  &__head {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+    padding: 1rem 1.15rem;
+    border-bottom: 1px solid var(--cd-border);
+
+    h2 {
+      margin: 0;
+      font-size: 0.98rem;
+      font-weight: 700;
+      color: var(--cd-ink);
+    }
+  }
+
+  &__body {
+    overflow-x: auto;
+  }
+}
+
+/* ===================== Filtros ===================== */
+.filtros {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.6rem;
+  flex-wrap: wrap;
+}
+
+.field-search {
+  position: relative;
+  min-width: 230px;
+
+  i {
+    position: absolute;
+    left: 0.7rem;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--cd-muted);
+    font-size: 0.85rem;
+  }
+
+  input {
+    width: 100%;
+    height: 38px;
+    padding: 0 0.7rem 0 2rem;
+    border: 1px solid var(--cd-border);
+    border-radius: 9px;
+    font-size: 0.83rem;
+    color: var(--cd-ink);
+
+    &:focus {
+      outline: none;
+      border-color: var(--cd-blue);
+    }
+  }
+}
+
+.select {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+
+  span {
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: var(--cd-muted);
+  }
+
+  select,
+  input {
+    height: 38px;
+    min-width: 140px;
+    padding: 0 0.6rem;
+    border: 1px solid var(--cd-border);
+    border-radius: 9px;
+    font-size: 0.82rem;
+    color: var(--cd-ink);
+    background: #fff;
+    cursor: pointer;
+    font-family: inherit;
+
+    &:focus {
+      outline: none;
+      border-color: var(--cd-blue);
+    }
+  }
+
+  &--num input {
+    min-width: 110px;
+    width: 110px;
+  }
+}
+
+/* ===================== Botones ===================== */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  height: 38px;
+  padding: 0 0.95rem;
+  border-radius: 9px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  border: 1px solid transparent;
+  white-space: nowrap;
+  transition: background 0.15s, border-color 0.15s;
+
+  &--primary {
+    background: var(--cd-blue);
+    color: #fff;
+
+    &:hover {
+      background: var(--cd-blue-hover);
+    }
+  }
+
+  &--ghost {
+    background: #fff;
+    border-color: var(--cd-border);
+    color: var(--cd-ink);
+
+    &:hover {
+      background: #f4f6fa;
+    }
+  }
+}
+
+/* ===================== Tabla ===================== */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.82rem;
+
+  thead th {
+    text-align: left;
+    padding: 0.7rem 1.15rem;
+    background: #f8fafc;
+    font-size: 0.7rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.02em;
+    color: var(--cd-muted);
+    border-bottom: 1px solid var(--cd-border);
+    white-space: nowrap;
+  }
+
+  tbody td {
+    padding: 0.6rem 1.15rem;
+    border-bottom: 1px solid #f1f3f7;
+    color: var(--cd-ink);
+    vertical-align: middle;
+  }
+
+  tbody tr:last-child td {
+    border-bottom: 0;
+  }
+
+  tbody tr {
+    border-left: 3px solid transparent;
+    transition: background 0.12s;
+
+    &:hover {
+      background: #f8fafc;
+    }
+  }
+
+  .num {
+    font-weight: 700;
+    white-space: nowrap;
+  }
+
+  .num--rojo {
+    color: #dc2626;
+  }
+
+  .muted {
+    color: var(--cd-muted);
+  }
+
+  .col-num {
+    width: 42px;
+  }
+
+  tfoot td {
+    padding: 0.65rem 1.15rem;
+    background: #f8fafc;
+    border-top: 1px solid var(--cd-border);
+    font-size: 0.8rem;
+  }
+
+  .tfoot-label {
+    text-align: right;
+    font-weight: 600;
+    color: var(--cd-muted);
+    text-transform: uppercase;
+    font-size: 0.7rem;
+    letter-spacing: 0.02em;
+  }
+}
+
+/* ===================== Cliente (avatar) ===================== */
+.cliente {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+
+  &__txt {
+    display: flex;
+    flex-direction: column;
+    gap: 0.1rem;
+
+    strong {
+      font-size: 0.83rem;
+      font-weight: 700;
+      color: var(--cd-ink);
+    }
+
+    small {
+      font-size: 0.72rem;
+      color: var(--cd-muted);
+    }
+  }
+}
+
+.avatar {
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--cd-blue-soft);
+  color: var(--cd-blue);
+  font-size: 0.74rem;
+  font-weight: 800;
+}
+
+.estado-fila {
+  text-align: center;
+  padding: 2.5rem 1rem !important;
+  color: var(--cd-muted);
+}
+
+/* ===================== Badges de mora ===================== */
+.badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.22rem 0.6rem;
+  border-radius: 99px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  background: #eef1f6;
+  color: var(--cd-muted);
+}
+
+.mora {
+  &--baja {
+    background: #fef3e2;
+    color: #d97706;
+  }
+
+  &--media {
+    background: #fde8d3;
+    color: #c2570b;
+  }
+
+  &--alta {
+    background: #fdeceb;
+    color: #dc2626;
+  }
+}
+
+/* ===================== Paginador ===================== */
+.paginador {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.75rem 1.15rem;
+  border-top: 1px solid var(--cd-border);
+
+  &__info {
+    font-size: 0.78rem;
+    color: var(--cd-muted);
+  }
+
+  &__nav {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+  }
+
+  &__page {
+    min-width: 28px;
+    height: 28px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 7px;
+    background: var(--cd-blue);
+    color: #fff;
+    font-size: 0.78rem;
+    font-weight: 700;
+  }
+}
+
+.icon-btn {
+  width: 30px;
+  height: 30px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 8px;
+  border: 1px solid var(--cd-border);
+  background: #fff;
+  color: var(--cd-muted);
+  cursor: pointer;
+  font-size: 0.78rem;
+
+  &:hover:not(:disabled) {
+    background: var(--cd-blue-soft);
+    color: var(--cd-blue);
+    border-color: var(--cd-blue);
+  }
+
+  &:disabled {
+    opacity: 0.4;
+    cursor: not-allowed;
+  }
+}

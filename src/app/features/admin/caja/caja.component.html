@@ -1,0 +1,294 @@
+<div class="caja">
+  <!-- ===================== Listado ===================== -->
+  <section class="card">
+    <header class="card__head">
+      <h2>Cajas diarias</h2>
+
+      <div class="filtros">
+        <div class="field-search">
+          <i class="pi pi-search"></i>
+          <input
+            type="text"
+            placeholder="Buscar por trabajador o ruta…"
+            [(ngModel)]="search"
+            (keyup.enter)="buscar()"
+          />
+        </div>
+
+        <label class="select">
+          <span>Fecha</span>
+          <input
+            type="date"
+            [(ngModel)]="filtroFecha"
+            (ngModelChange)="aplicarFiltro()"
+          />
+        </label>
+
+        <label class="select">
+          <span>Trabajador</span>
+          <select [(ngModel)]="filtroTrabajador" (ngModelChange)="aplicarFiltro()">
+            <option value="">Todos</option>
+            @for (t of trabajadores(); track t.id) {
+              <option [value]="t.id">{{ t.nombre }}</option>
+            }
+          </select>
+        </label>
+
+        <label class="select">
+          <span>Ruta</span>
+          <select [(ngModel)]="filtroRuta" (ngModelChange)="aplicarFiltro()">
+            <option value="">Todas</option>
+            @for (r of rutas(); track r.id) {
+              <option [value]="r.id">{{ r.nombre }}</option>
+            }
+          </select>
+        </label>
+
+        <label class="select">
+          <span>Estado</span>
+          <select [(ngModel)]="filtroEstado" (ngModelChange)="aplicarFiltro()">
+            <option value="">Todos</option>
+            <option value="ABIERTA">Abierta</option>
+            <option value="CERRADA">Cerrada</option>
+            <option value="CERRADA_CON_DIFERENCIA">Con diferencia</option>
+          </select>
+        </label>
+
+        <button type="button" class="btn btn--ghost" (click)="limpiarFiltros()">
+          <i class="pi pi-filter-slash"></i> Limpiar filtros
+        </button>
+      </div>
+    </header>
+
+    <div class="card__body">
+      <table class="table">
+        <thead>
+          <tr>
+            <th class="col-num">#</th>
+            <th>Trabajador</th>
+            <th>Ruta</th>
+            <th>Fecha</th>
+            <th>Caja inicial</th>
+            <th>Préstamos</th>
+            <th>Recaudado</th>
+            <th>Esperado</th>
+            <th>Entregado</th>
+            <th>Diferencia</th>
+            <th>Estado</th>
+            <th class="col-acc"></th>
+          </tr>
+        </thead>
+        <tbody>
+          @if (loading()) {
+            <tr>
+              <td colspan="12" class="estado-fila">
+                <i class="pi pi-spin pi-spinner"></i> Cargando…
+              </td>
+            </tr>
+          } @else if (rows().length === 0) {
+            <tr>
+              <td colspan="12" class="estado-fila">
+                No hay cajas diarias con los filtros seleccionados.
+              </td>
+            </tr>
+          } @else {
+            @for (c of rows(); track c.id; let i = $index) {
+              <tr>
+                <td class="col-num muted">{{ page() * tamano + i + 1 }}</td>
+                <td><strong>{{ c.trabajador || '—' }}</strong></td>
+                <td class="muted">{{ c.ruta || '—' }}</td>
+                <td class="muted">{{ fecha(c.fecha_caja) }}</td>
+                <td class="num">{{ moneda(c.valor_inicial) }}</td>
+                <td class="num">{{ moneda(c.valor_prestamos_entregados) }}</td>
+                <td class="num">{{ moneda(c.valor_recaudado) }}</td>
+                <td class="num">{{ moneda(c.valor_esperado_cierre) }}</td>
+                <td class="num">
+                  {{ esAbierta(c.estado) ? '—' : moneda(c.valor_entregado) }}
+                </td>
+                <td class="num" [class]="claseDiferencia(c.diferencia)">
+                  {{ esAbierta(c.estado) ? '—' : moneda(c.diferencia) }}
+                </td>
+                <td>
+                  <span class="badge" [class]="badgeEstado(c.estado)">
+                    {{ estadoLabel(c.estado) }}
+                  </span>
+                </td>
+                <td class="col-acc">
+                  <button
+                    type="button"
+                    class="icon-btn"
+                    [title]="esAbierta(c.estado) ? 'Cerrar caja' : 'Ver caja'"
+                    (click)="abrirCaja(c)"
+                  >
+                    <i
+                      class="pi"
+                      [class.pi-lock]="esAbierta(c.estado)"
+                      [class.pi-eye]="!esAbierta(c.estado)"
+                    ></i>
+                  </button>
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <footer class="paginador">
+      <span class="paginador__info">
+        Mostrando {{ rows().length }} de {{ totalElements() }} cajas
+      </span>
+      <div class="paginador__nav">
+        <button
+          type="button"
+          class="icon-btn"
+          [disabled]="page() === 0"
+          (click)="irPagina(page() - 1)"
+        >
+          <i class="pi pi-chevron-left"></i>
+        </button>
+        <span class="paginador__page">{{ page() + 1 }}</span>
+        <button
+          type="button"
+          class="icon-btn"
+          [disabled]="page() + 1 >= totalPages()"
+          (click)="irPagina(page() + 1)"
+        >
+          <i class="pi pi-chevron-right"></i>
+        </button>
+      </div>
+    </footer>
+  </section>
+</div>
+
+<!-- ===================== Diálogo de cierre de caja ===================== -->
+<p-dialog
+  [visible]="dialogVisible()"
+  (visibleChange)="dialogVisible.set($event)"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: '560px' }"
+  [header]="caja() && esAbierta(caja()!.estado) ? 'Cerrar caja diaria' : 'Detalle de la caja'"
+>
+  @if (cajaCargando()) {
+    <div class="panel__vacio">
+      <i class="pi pi-spin pi-spinner"></i>
+      <p>Cargando caja…</p>
+    </div>
+  } @else if (caja(); as c) {
+    <div class="cierre">
+      <div class="cierre__top">
+        <div>
+          <span class="cierre__label">{{ c.trabajadorNombre || 'Trabajador' }}</span>
+          <strong class="cierre__sub">
+            {{ c.rutaNombre || 'Sin ruta' }} · {{ fecha(c.fechaCaja) }}
+          </strong>
+        </div>
+        <span class="badge" [class]="badgeEstado(c.estado)">
+          {{ estadoLabel(c.estado) }}
+        </span>
+      </div>
+
+      @if (!esAbierta(c.estado)) {
+        <div class="aviso">
+          <i class="pi pi-info-circle"></i>
+          Esta caja ya fue cerrada y no puede cerrarse de nuevo.
+        </div>
+      }
+
+      <!-- Resumen del dinero -->
+      <div class="resumen">
+        <div class="resumen__item">
+          <span>Caja inicial</span><strong>{{ moneda(c.valorInicial) }}</strong>
+        </div>
+        <div class="resumen__item">
+          <span>Préstamos entregados</span>
+          <strong class="neg">- {{ moneda(c.valorPrestamosEntregados) }}</strong>
+        </div>
+        <div class="resumen__item">
+          <span>Recaudo recibido</span>
+          <strong class="pos">+ {{ moneda(c.valorRecaudado) }}</strong>
+        </div>
+        <div class="resumen__item resumen__item--destacado">
+          <span>Valor esperado de cierre</span>
+          <strong>{{ moneda(c.valorEsperadoCierre) }}</strong>
+        </div>
+      </div>
+
+      <!-- Captura del valor entregado -->
+      <div class="campo">
+        <label for="valorEntregado">Valor entregado por el trabajador</label>
+        <input
+          id="valorEntregado"
+          type="number"
+          min="0"
+          step="1000"
+          inputmode="numeric"
+          placeholder="0"
+          [(ngModel)]="valorEntregado"
+          [disabled]="!esAbierta(c.estado)"
+        />
+      </div>
+
+      <!-- Diferencia calculada en vivo -->
+      <div class="diferencia" [class]="claseDiferencia(diferencia())">
+        <span class="diferencia__label">Diferencia</span>
+        <strong class="diferencia__valor">{{ moneda(diferencia()) }}</strong>
+        <span class="diferencia__nota">
+          @if (!hayDiferencia()) {
+            El dinero entregado coincide con lo esperado.
+          } @else if (diferencia() > 0) {
+            Sobrante respecto al valor esperado.
+          } @else {
+            Faltante respecto al valor esperado.
+          }
+        </span>
+      </div>
+
+      <!-- Observación: obligatoria si hay diferencia -->
+      @if (esAbierta(c.estado) || c.observacion) {
+        <div class="campo">
+          <label for="observacion">
+            Observación
+            @if (esAbierta(c.estado) && hayDiferencia()) {
+              <em class="req">obligatoria por la diferencia</em>
+            }
+          </label>
+          <textarea
+            id="observacion"
+            rows="3"
+            placeholder="Motivo de la diferencia o nota del cierre…"
+            [(ngModel)]="observacion"
+            [disabled]="!esAbierta(c.estado)"
+          ></textarea>
+        </div>
+      }
+    </div>
+  } @else {
+    <div class="panel__vacio">
+      <i class="pi pi-wallet"></i>
+      <p>No se encontró la caja.</p>
+    </div>
+  }
+
+  <div class="form__actions">
+    <button type="button" class="btn btn--ghost" (click)="dialogVisible.set(false)">
+      Cerrar
+    </button>
+    @if (caja() && esAbierta(caja()!.estado)) {
+      <button
+        type="button"
+        class="btn btn--primary"
+        [disabled]="cerrando()"
+        (click)="cerrarCaja()"
+      >
+        @if (cerrando()) {
+          <i class="pi pi-spin pi-spinner"></i> Cerrando…
+        } @else {
+          <i class="pi pi-lock"></i> Cerrar caja
+        }
+      </button>
+    }
+  </div>
+</p-dialog>

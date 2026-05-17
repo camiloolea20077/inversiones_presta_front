@@ -1,0 +1,241 @@
+<div class="pagos">
+  <!-- ===================== Listado ===================== -->
+  <section class="card">
+    <header class="card__head">
+      <h2>Pagos registrados</h2>
+
+      <div class="filtros">
+        <div class="field-search">
+          <i class="pi pi-search"></i>
+          <input
+            type="text"
+            placeholder="Buscar por cliente o trabajador…"
+            [(ngModel)]="search"
+            (keyup.enter)="buscar()"
+          />
+        </div>
+
+        <label class="select">
+          <span>Fecha</span>
+          <input
+            type="date"
+            [(ngModel)]="filtroFecha"
+            (ngModelChange)="aplicarFiltro()"
+          />
+        </label>
+
+        <label class="select">
+          <span>Trabajador</span>
+          <select [(ngModel)]="filtroTrabajador" (ngModelChange)="aplicarFiltro()">
+            <option value="">Todos</option>
+            @for (t of trabajadores(); track t.id) {
+              <option [value]="t.id">{{ t.nombre }}</option>
+            }
+          </select>
+        </label>
+
+        <label class="select">
+          <span>Ruta</span>
+          <select [(ngModel)]="filtroRuta" (ngModelChange)="aplicarFiltro()">
+            <option value="">Todas</option>
+            @for (r of rutas(); track r.id) {
+              <option [value]="r.id">{{ r.nombre }}</option>
+            }
+          </select>
+        </label>
+
+        <button type="button" class="btn btn--ghost" (click)="limpiarFiltros()">
+          <i class="pi pi-filter-slash"></i> Limpiar filtros
+        </button>
+      </div>
+    </header>
+
+    <div class="card__body">
+      <table class="table">
+        <thead>
+          <tr>
+            <th class="col-num">#</th>
+            <th>Fecha</th>
+            <th>Cliente</th>
+            <th>Trabajador</th>
+            <th>Ruta</th>
+            <th>Forma de pago</th>
+            <th>Valor</th>
+            <th>Estado</th>
+            <th class="col-acc"></th>
+          </tr>
+        </thead>
+        <tbody>
+          @if (loading()) {
+            <tr>
+              <td colspan="9" class="estado-fila">
+                <i class="pi pi-spin pi-spinner"></i> Cargando…
+              </td>
+            </tr>
+          } @else if (rows().length === 0) {
+            <tr>
+              <td colspan="9" class="estado-fila">
+                No hay pagos registrados con los filtros seleccionados.
+              </td>
+            </tr>
+          } @else {
+            @for (p of rows(); track p.id; let i = $index) {
+              <tr [class.is-anulado]="esAnulado(p.estado)">
+                <td class="col-num muted">{{ page() * tamano + i + 1 }}</td>
+                <td class="muted">{{ fechaHora(p.fecha_pago) }}</td>
+                <td><strong>{{ p.cliente }}</strong></td>
+                <td class="muted">{{ p.trabajador || '—' }}</td>
+                <td class="muted">{{ p.ruta || '—' }}</td>
+                <td class="muted">{{ p.forma_pago }}</td>
+                <td class="num">{{ moneda(p.valor_pago) }}</td>
+                <td>
+                  <span class="badge" [class]="badgeEstado(p.estado)">
+                    {{ p.estado }}
+                  </span>
+                </td>
+                <td class="col-acc">
+                  <button
+                    type="button"
+                    class="icon-btn"
+                    title="Ver detalle"
+                    (click)="verDetalle(p)"
+                  >
+                    <i class="pi pi-eye"></i>
+                  </button>
+                </td>
+              </tr>
+            }
+          }
+        </tbody>
+      </table>
+    </div>
+
+    <footer class="paginador">
+      <span class="paginador__info">
+        Mostrando {{ rows().length }} de {{ totalElements() }} pagos
+      </span>
+      <div class="paginador__nav">
+        <button
+          type="button"
+          class="icon-btn"
+          [disabled]="page() === 0"
+          (click)="irPagina(page() - 1)"
+        >
+          <i class="pi pi-chevron-left"></i>
+        </button>
+        <span class="paginador__page">{{ page() + 1 }}</span>
+        <button
+          type="button"
+          class="icon-btn"
+          [disabled]="page() + 1 >= totalPages()"
+          (click)="irPagina(page() + 1)"
+        >
+          <i class="pi pi-chevron-right"></i>
+        </button>
+      </div>
+    </footer>
+  </section>
+</div>
+
+<!-- ===================== Diálogo detalle del pago ===================== -->
+<p-dialog
+  [visible]="dialogVisible()"
+  (visibleChange)="dialogVisible.set($event)"
+  [modal]="true"
+  [draggable]="false"
+  [resizable]="false"
+  [style]="{ width: '560px' }"
+  header="Detalle del pago"
+>
+  @if (detalleCargando()) {
+    <div class="panel__vacio">
+      <i class="pi pi-spin pi-spinner"></i>
+      <p>Cargando detalle…</p>
+    </div>
+  } @else if (detalle(); as d) {
+    <div class="detalle">
+      <div class="detalle__top">
+        <div>
+          <span class="detalle__label">Pago #{{ d.id }}</span>
+          <strong class="detalle__valor">{{ moneda(d.valorPago) }}</strong>
+        </div>
+        <span class="badge" [class]="badgeEstado(d.estado)">{{ d.estado }}</span>
+      </div>
+
+      @if (esAnulado(d.estado)) {
+        <div class="aviso">
+          <i class="pi pi-exclamation-triangle"></i>
+          Este pago figura como {{ d.estado }} y no suma al recaudo.
+        </div>
+      }
+
+      <div class="resumen">
+        <div class="resumen__item">
+          <span>Fecha y hora</span><strong>{{ fechaHora(d.fechaPago) }}</strong>
+        </div>
+        <div class="resumen__item">
+          <span>Forma de pago</span><strong>{{ d.formaPago }}</strong>
+        </div>
+        <div class="resumen__item">
+          <span>Cliente</span><strong>{{ d.clienteNombre || '—' }}</strong>
+        </div>
+        <div class="resumen__item">
+          <span>Documento</span><strong>{{ d.clienteDocumento || '—' }}</strong>
+        </div>
+        <div class="resumen__item">
+          <span>Teléfono</span><strong>{{ d.clienteTelefono || '—' }}</strong>
+        </div>
+        <div class="resumen__item">
+          <span>Trabajador</span><strong>{{ d.trabajadorNombre || '—' }}</strong>
+        </div>
+        <div class="resumen__item">
+          <span>Ruta</span><strong>{{ d.rutaNombre || '—' }}</strong>
+        </div>
+        <div class="resumen__item">
+          <span>Cuota aplicada</span>
+          <strong>{{ d.numeroCuota ? ('#' + d.numeroCuota) : '—' }}</strong>
+        </div>
+      </div>
+
+      <h4 class="subtitulo">Préstamo asociado</h4>
+      <div class="resumen">
+        <div class="resumen__item">
+          <span>Préstamo</span><strong>#{{ d.prestamoId }}</strong>
+        </div>
+        <div class="resumen__item">
+          <span>Monto prestado</span><strong>{{ moneda(d.prestamoMonto) }}</strong>
+        </div>
+        <div class="resumen__item">
+          <span>Total a pagar</span><strong>{{ moneda(d.prestamoTotalPagar) }}</strong>
+        </div>
+        <div class="resumen__item">
+          <span>Saldo actual</span><strong>{{ moneda(d.prestamoSaldoActual) }}</strong>
+        </div>
+        <div class="resumen__item">
+          <span>Estado préstamo</span>
+          <strong>
+            <span class="badge" [class]="badgeEstado(d.prestamoEstado)">
+              {{ d.prestamoEstado || '—' }}
+            </span>
+          </strong>
+        </div>
+      </div>
+
+      @if (d.observacion) {
+        <h4 class="subtitulo">Observación</h4>
+        <p class="observacion">{{ d.observacion }}</p>
+      }
+    </div>
+  } @else {
+    <div class="panel__vacio">
+      <i class="pi pi-wallet"></i>
+      <p>No se encontró el detalle del pago.</p>
+    </div>
+  }
+
+  <div class="form__actions">
+    <button type="button" class="btn btn--ghost" (click)="dialogVisible.set(false)">
+      Cerrar
+    </button>
+  </div>
+</p-dialog>

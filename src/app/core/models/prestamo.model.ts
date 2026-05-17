@@ -79,3 +79,37 @@ export interface Simulacion {
   cuotaDiaria: number;
   plazoDias: number;
 }
+
+/**
+ * Datos para crear cliente nuevo + préstamo en una sola operación
+ * transaccional (HU-BE-014 / HU-FE-009 / HU-FE-010).
+ */
+export interface ClienteConPrestamoRequest {
+  documento?: string | null;
+  nombre: string;
+  telefono?: string | null;
+  direccion?: string | null;
+  barrio?: string | null;
+  observacionCliente?: string | null;
+
+  rutaId: number;
+  /** Orden del cliente base tras el cual se inserta; null = al final. */
+  ordenBase?: number | null;
+
+  trabajadorId: number;
+  montoPrestado: number;
+  tasaPorcentaje: number;
+  tipoInteres: string;
+  plazoDias: number;
+  observacionPrestamo?: string | null;
+}
+
+/** Resultado de crear cliente + préstamo en una sola operación. */
+export interface ClienteConPrestamo {
+  clienteId: number;
+  clienteNombre: string;
+  ordenAsignado: number | null;
+  prestamo: Prestamo;
+  recaudoDiarioId: number | null;
+  planillaActualizada: boolean;
+}
