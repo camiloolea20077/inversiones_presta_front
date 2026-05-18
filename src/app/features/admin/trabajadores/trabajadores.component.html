@@ -234,29 +234,34 @@
       </header>
       @if (seleccionado(); as t) {
         <div class="panel__body">
+          <!-- Recaudo destacado -->
+          <div class="recaudo-card">
+            <div class="recaudo-card__icon">
+              <i class="pi pi-dollar"></i>
+            </div>
+            <div class="recaudo-card__info">
+              <span class="recaudo-card__label">Recaudo de hoy</span>
+              <strong class="recaudo-card__valor">{{ moneda(t.recaudo_hoy) }}</strong>
+            </div>
+          </div>
+
+          <!-- Métricas operativas -->
           <div class="mini-stats">
             <div class="mini-stat">
               <span>Clientes asignados</span>
               <strong>{{ t.clientes }}</strong>
             </div>
             <div class="mini-stat">
-              <span>Recaudo de hoy</span>
-              <strong>{{ moneda(t.recaudo_hoy) }}</strong>
+              <span>Promedio por cliente</span>
+              <strong>{{ moneda(promedioPorCliente()) }}</strong>
             </div>
           </div>
 
-          <div class="tendencia">
-            <span class="tendencia__label">Tendencia de recaudo</span>
-            <svg viewBox="0 0 220 64" preserveAspectRatio="none" class="tendencia__chart">
-              <polyline
-                points="4,52 36,40 68,46 100,28 132,34 164,18 196,24 216,10"
-                fill="none"
-                stroke="#0b53d7"
-                stroke-width="2.5"
-                stroke-linecap="round"
-                stroke-linejoin="round"
-              />
-            </svg>
+          <!-- Ruta -->
+          <div class="rendimiento-ruta">
+            <i class="pi pi-map-marker"></i>
+            <span>Ruta asignada</span>
+            <strong>{{ t.ruta_asignada || 'Sin asignar' }}</strong>
           </div>
         </div>
       } @else {

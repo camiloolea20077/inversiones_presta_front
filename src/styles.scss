@@ -39,3 +39,98 @@ body {
     padding: 0.9rem 1.45rem 1.15rem;
   }
 }
+
+/* ===================== Toast (PrimeNG p-toast) =====================
+   Estilo más profesional: tarjeta limpia, sombra suave, acento de color
+   a la izquierda según severidad y tipografía equilibrada. En móvil el
+   toast se centra y ocupa el ancho disponible. */
+.p-toast {
+  width: 22rem;
+  max-width: calc(100vw - 2rem);
+  font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', sans-serif;
+
+  .p-toast-message {
+    margin: 0 0 0.85rem;
+    border: 1px solid var(--cd-border);
+    border-left: 4px solid var(--cd-muted);
+    border-radius: 12px;
+    background: #ffffff;
+    box-shadow: 0 10px 28px -8px rgba(15, 23, 42, 0.22),
+      0 2px 6px rgba(15, 23, 42, 0.06);
+    backdrop-filter: none;
+  }
+
+  .p-toast-message-content {
+    padding: 0.95rem 1.05rem;
+    gap: 0.7rem;
+    align-items: flex-start;
+  }
+
+  .p-toast-message-icon {
+    font-size: 1.2rem;
+    margin-top: 0.05rem;
+  }
+
+  .p-toast-summary {
+    font-size: 0.92rem;
+    font-weight: 600;
+    color: var(--cd-ink);
+    line-height: 1.3;
+  }
+
+  .p-toast-detail {
+    margin-top: 0.2rem;
+    font-size: 0.84rem;
+    font-weight: 400;
+    color: var(--cd-muted);
+    line-height: 1.4;
+  }
+
+  .p-toast-close-button {
+    width: 1.6rem;
+    height: 1.6rem;
+    color: var(--cd-muted);
+    transition: background-color 0.15s ease, color 0.15s ease;
+
+    &:hover {
+      background: var(--cd-bg);
+      color: var(--cd-ink);
+    }
+  }
+
+  /* Acento por severidad */
+  .p-toast-message-success {
+    border-left-color: #16a34a;
+    .p-toast-message-icon { color: #16a34a; }
+  }
+
+  .p-toast-message-info {
+    border-left-color: var(--cd-blue);
+    .p-toast-message-icon { color: var(--cd-blue); }
+  }
+
+  .p-toast-message-warn {
+    border-left-color: #d97706;
+    .p-toast-message-icon { color: #d97706; }
+  }
+
+  .p-toast-message-error {
+    border-left-color: #dc2626;
+    .p-toast-message-icon { color: #dc2626; }
+  }
+}
+
+/* En móvil: centrado horizontal y anclado arriba */
+@media (max-width: 640px) {
+  .p-toast {
+    width: auto;
+    left: 50% !important;
+    right: auto !important;
+    transform: translateX(-50%);
+    top: 1rem !important;
+
+    .p-toast-message {
+      margin-bottom: 0.65rem;
+    }
+  }
+}

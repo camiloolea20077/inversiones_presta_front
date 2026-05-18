@@ -49,6 +49,15 @@ export class TrabajadoresComponent implements OnInit {
   readonly limiteSeleccionado = signal<LimiteTrabajador | null>(null);
   readonly limiteCargando = signal(false);
 
+  /** Recaudo de hoy promediado entre los clientes asignados. */
+  readonly promedioPorCliente = computed(() => {
+    const t = this.seleccionado();
+    if (!t || !t.clientes) {
+      return 0;
+    }
+    return t.recaudo_hoy / t.clientes;
+  });
+
   /** ===== Diálogo ===== */
   readonly dialogVisible = signal(false);
   readonly editandoId = signal<number | null>(null);
