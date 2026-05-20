@@ -28,6 +28,10 @@
             ],
             "styles": [
               "src/styles.scss"
+            ],
+            "allowedCommonJsDependencies": [
+              "exceljs",
+              "file-saver"
             ]
           },
           "configurations": {

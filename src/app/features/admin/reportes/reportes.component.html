@@ -1,0 +1,130 @@
+<div class="reportes">
+  @if (cargando()) {
+    <div class="state">
+      <i class="pi pi-spin pi-spinner"></i>
+      <span>Calculando rentabilidad…</span>
+    </div>
+  } @else if (!rentabilidad()) {
+    <div class="state state--error">
+      <i class="pi pi-exclamation-triangle"></i>
+      <span>No se pudo cargar el reporte.</span>
+      <button class="btn btn--primary" (click)="cargar()">Reintentar</button>
+    </div>
+  } @else {
+    <!-- ===================== Filtros ===================== -->
+    <section class="card filtros">
+      <label class="select">
+        <span>Fecha de corte</span>
+        <input
+          type="date"
+          [(ngModel)]="fechaCorte"
+          (ngModelChange)="cargar()"
+        />
+      </label>
+
+      <div class="meta">
+        <i class="pi pi-calendar"></i>
+        Reporte al {{ rentabilidad()!.fechaCorte }}
+      </div>
+
+      <button
+        type="button"
+        class="btn btn--excel"
+        (click)="exportarExcel()"
+        [disabled]="!rentabilidad() || exportando()"
+      >
+        @if (exportando()) {
+          <i class="pi pi-spin pi-spinner"></i> Generando…
+        } @else {
+          <i class="pi pi-file-excel"></i> Exportar Excel
+        }
+      </button>
+    </section>
+
+    @if (rentabilidad()!.capitalAportado <= 0) {
+      <section class="alert">
+        <i class="pi pi-info-circle"></i>
+        Aún no hay un presupuesto inicial registrado. Las métricas son cero
+        hasta que el administrador registre el capital.
+      </section>
+    }
+
+    <!-- ===================== Capital ===================== -->
+    <h3 class="section-title">Capital del administrador</h3>
+    <section class="kpis">
+      @for (k of kpisCapital(); track k.label) {
+        <article class="kpi" [class]="'tone-' + k.tone">
+          <div class="kpi__top">
+            <span class="kpi__icon"><i [class]="k.icon"></i></span>
+            <span class="kpi__label">{{ k.label }}</span>
+          </div>
+          <p class="kpi__valor">{{ k.valor }}</p>
+          <p class="kpi__hint">{{ k.hint }}</p>
+        </article>
+      }
+    </section>
+
+    <!-- ===================== Rentabilidad ===================== -->
+    <h3 class="section-title">Rentabilidad</h3>
+    <section class="kpis">
+      @for (k of kpisRentabilidad(); track k.label) {
+        <article class="kpi" [class]="'tone-' + k.tone">
+          <div class="kpi__top">
+            <span class="kpi__icon"><i [class]="k.icon"></i></span>
+            <span class="kpi__label">{{ k.label }}</span>
+          </div>
+          <p class="kpi__valor">{{ k.valor }}</p>
+          <p class="kpi__hint">{{ k.hint }}</p>
+        </article>
+      }
+    </section>
+
+    <!-- ===================== Gráficos ===================== -->
+    <section class="charts">
+      <article class="card">
+        <header class="card__head">
+          <h2>Composición del capital</h2>
+        </header>
+        <div class="card__body chart-body">
+          @if (composicionCapital()) {
+            <p-chart
+              type="doughnut"
+              [data]="composicionCapital()!"
+              [options]="composicionOptions"
+            />
+          }
+        </div>
+      </article>
+
+      <article class="card">
+        <header class="card__head">
+          <h2>Intereses cobrados vs por cobrar</h2>
+        </header>
+        <div class="card__body chart-body">
+          @if (interesesData()) {
+            <p-chart
+              type="bar"
+              [data]="interesesData()!"
+              [options]="interesesOptions"
+            />
+          }
+        </div>
+      </article>
+    </section>
+
+    <!-- ===================== Cartera & Mora ===================== -->
+    <h3 class="section-title">Cartera y mora</h3>
+    <section class="kpis">
+      @for (k of kpisCartera(); track k.label) {
+        <article class="kpi" [class]="'tone-' + k.tone">
+          <div class="kpi__top">
+            <span class="kpi__icon"><i [class]="k.icon"></i></span>
+            <span class="kpi__label">{{ k.label }}</span>
+          </div>
+          <p class="kpi__valor">{{ k.valor }}</p>
+          <p class="kpi__hint">{{ k.hint }}</p>
+        </article>
+      }
+    </section>
+  }
+</div>

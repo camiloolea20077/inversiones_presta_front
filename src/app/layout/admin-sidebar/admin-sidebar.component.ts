@@ -17,12 +17,14 @@ interface MenuItem {
 export class AdminSidebarComponent {
   readonly menu: MenuItem[] = [
     { label: 'Dashboard', icon: 'pi pi-th-large', route: '/admin/dashboard' },
+    { label: 'Presupuesto', icon: 'pi pi-briefcase', route: '/admin/presupuesto' },
     { label: 'Rutas', icon: 'pi pi-map', route: '/admin/rutas' },
     { label: 'Trabajadores', icon: 'pi pi-user', route: '/admin/trabajadores' },
     { label: 'Clientes', icon: 'pi pi-users', route: '/admin/clientes' },
     { label: 'Préstamos', icon: 'pi pi-dollar', route: '/admin/prestamos' },
     { label: 'Pagos', icon: 'pi pi-credit-card', route: '/admin/pagos' },
     { label: 'Caja Diaria', icon: 'pi pi-wallet', route: '/admin/caja' },
+    { label: 'Reportes', icon: 'pi pi-chart-line', route: '/admin/reportes' },
     { label: 'Mora', icon: 'pi pi-clock', route: '/admin/mora' },
     { label: 'Auditoría', icon: 'pi pi-file', route: '/admin/auditoria' },
     { label: 'Configuración', icon: 'pi pi-cog', route: '/admin/configuracion' },

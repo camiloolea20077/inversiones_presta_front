@@ -1,0 +1,234 @@
+:host {
+  display: block;
+}
+
+.reportes {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.section-title {
+  margin: 0.4rem 0 -0.4rem;
+  font-size: 0.85rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--cd-muted);
+}
+
+.card {
+  background: #fff;
+  border: 1px solid var(--cd-border);
+  border-radius: 14px;
+  display: flex;
+  flex-direction: column;
+
+  &__head {
+    padding: 0.9rem 1.1rem;
+    border-bottom: 1px solid var(--cd-border);
+
+    h2 {
+      margin: 0;
+      font-size: 0.95rem;
+      font-weight: 700;
+      color: var(--cd-ink);
+    }
+  }
+
+  &__body {
+    padding: 1rem 1.1rem;
+  }
+}
+
+.filtros {
+  flex-direction: row;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.85rem 1.1rem;
+  flex-wrap: wrap;
+}
+
+.select {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+
+  span {
+    font-size: 0.68rem;
+    font-weight: 600;
+    color: var(--cd-muted);
+  }
+
+  input {
+    height: 36px;
+    min-width: 150px;
+    padding: 0 0.6rem;
+    border: 1px solid var(--cd-border);
+    border-radius: 9px;
+    font-size: 0.82rem;
+    color: var(--cd-ink);
+    background: #fff;
+    font-family: inherit;
+
+    &:focus {
+      outline: none;
+      border-color: var(--cd-blue);
+    }
+  }
+}
+
+.meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+  font-size: 0.82rem;
+  color: var(--cd-muted);
+}
+
+.alert {
+  background: #fff7ed;
+  border: 1px solid #fde68a;
+  border-radius: 12px;
+  padding: 0.8rem 1rem;
+  color: #92400e;
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+  font-size: 0.85rem;
+}
+
+/* ===================== KPIs ===================== */
+.kpis {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1rem;
+
+  @media (max-width: 1100px) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+.kpi {
+  background: #fff;
+  border: 1px solid var(--cd-border);
+  border-radius: 14px;
+  padding: 1rem 1.1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+
+  &.tone-blue { --tone: #0b53d7; }
+  &.tone-green { --tone: #16a34a; }
+  &.tone-amber { --tone: #f5a623; }
+  &.tone-purple { --tone: #8b5cf6; }
+  &.tone-cyan { --tone: #06b6d4; }
+  &.tone-red { --tone: #ef4444; }
+
+  &__top {
+    display: flex;
+    align-items: center;
+    gap: 0.55rem;
+  }
+
+  &__icon {
+    width: 34px;
+    height: 34px;
+    border-radius: 9px;
+    background: var(--tone);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.95rem;
+  }
+
+  &__label {
+    font-size: 0.78rem;
+    font-weight: 600;
+    color: var(--cd-muted);
+  }
+
+  &__valor {
+    margin: 0.1rem 0 0;
+    font-size: 1.3rem;
+    font-weight: 800;
+    color: var(--cd-ink);
+  }
+
+  &__hint {
+    margin: 0;
+    font-size: 0.72rem;
+    color: var(--cd-muted);
+  }
+}
+
+/* ===================== Charts ===================== */
+.charts {
+  display: grid;
+  grid-template-columns: 1fr 1.4fr;
+  gap: 1rem;
+
+  @media (max-width: 1100px) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.chart-body {
+  height: 260px;
+}
+
+/* ===================== Estado ===================== */
+.state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.7rem;
+  padding: 4rem 1rem;
+  color: var(--cd-muted);
+  font-size: 0.9rem;
+
+  &--error {
+    color: #ef4444;
+  }
+}
+
+/* ===================== Botones ===================== */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  height: 38px;
+  padding: 0 0.95rem;
+  border-radius: 9px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  font-family: inherit;
+  cursor: pointer;
+  border: 1px solid transparent;
+
+  &--primary {
+    background: var(--cd-blue);
+    color: #fff;
+
+    &:hover {
+      background: #093f9f;
+    }
+  }
+
+  &--excel {
+    background: #16a34a;
+    color: #fff;
+    margin-left: auto;
+
+    &:hover {
+      background: #128239;
+    }
+
+    &[disabled] {
+      opacity: 0.65;
+      cursor: not-allowed;
+    }
+  }
+}

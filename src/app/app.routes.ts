@@ -73,6 +73,20 @@ export const routes: Routes = [
           ),
       },
       {
+        path: 'presupuesto',
+        loadComponent: () =>
+          import('./features/admin/presupuesto/presupuesto.component').then(
+            (m) => m.PresupuestoComponent,
+          ),
+      },
+      {
+        path: 'reportes',
+        loadComponent: () =>
+          import('./features/admin/reportes/reportes.component').then(
+            (m) => m.ReportesComponent,
+          ),
+      },
+      {
         path: 'mora',
         loadComponent: () =>
           import('./features/admin/mora/mora.component').then(

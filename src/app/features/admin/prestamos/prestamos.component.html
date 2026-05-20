@@ -216,6 +216,23 @@
   header="Nuevo préstamo"
 >
   <form class="form" [formGroup]="formPrestamo">
+    <!-- Saldo disponible del presupuesto del administrador -->
+    @if (saldoDisponible() !== null) {
+      <div class="saldo-banner" [class.saldo-banner--alerta]="excedeSaldo()">
+        <i class="pi pi-wallet"></i>
+        <div>
+          <span>Saldo disponible del administrador</span>
+          <strong>{{ moneda(saldoDisponible()) }}</strong>
+        </div>
+        @if (excedeSaldo()) {
+          <span class="saldo-banner__warn">
+            <i class="pi pi-exclamation-triangle"></i>
+            El monto excede el saldo disponible
+          </span>
+        }
+      </div>
+    }
+
     <div class="form__row">
       <div class="form__field">
         <label>Cliente *</label>
@@ -314,7 +331,7 @@
     <button
       type="button"
       class="btn btn--primary"
-      [disabled]="guardando()"
+      [disabled]="guardando() || excedeSaldo()"
       (click)="guardar()"
     >
       @if (guardando()) {

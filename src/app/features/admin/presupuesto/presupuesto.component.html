@@ -1,0 +1,157 @@
+<div class="presupuesto">
+  @if (cargando()) {
+    <div class="state">
+      <i class="pi pi-spin pi-spinner"></i>
+      <span>Cargando presupuesto…</span>
+    </div>
+  } @else if (!presupuesto()) {
+    <!-- ===================== Estado vacío ===================== -->
+    <section class="empty-state">
+      <div class="empty-state__icon">
+        <i class="pi pi-briefcase"></i>
+      </div>
+      <h2>Aún no hay un presupuesto abierto</h2>
+      <p>
+        Para empezar a operar, registra el monto inicial con el que cuenta el
+        administrador. Desde ese capital se descontará cada préstamo y se
+        calcularán los reportes de rentabilidad.
+      </p>
+      <button type="button" class="btn btn--primary" (click)="abrirDialogo('abrir')">
+        <i class="pi pi-plus"></i> Registrar presupuesto inicial
+      </button>
+    </section>
+  } @else {
+    <!-- ===================== KPIs ===================== -->
+    <section class="kpis">
+      @for (k of kpis(); track k.label) {
+        <article class="kpi" [class]="'tone-' + k.tone">
+          <div class="kpi__top">
+            <span class="kpi__icon"><i [class]="k.icon"></i></span>
+            <span class="kpi__label">{{ k.label }}</span>
+          </div>
+          <p class="kpi__valor">{{ k.valor }}</p>
+          <p class="kpi__hint">{{ k.hint }}</p>
+        </article>
+      }
+    </section>
+
+    <!-- ===================== Acciones ===================== -->
+    <section class="actions">
+      <button type="button" class="btn btn--primary" (click)="abrirDialogo('capitalizar')">
+        <i class="pi pi-plus"></i> Capitalizar
+      </button>
+      <button type="button" class="btn btn--ghost" (click)="abrirDialogo('retirar')">
+        <i class="pi pi-minus"></i> Retirar
+      </button>
+    </section>
+
+    <!-- ===================== Detalle ===================== -->
+    <section class="card">
+      <header class="card__head">
+        <h2>Detalle del presupuesto</h2>
+      </header>
+      <div class="card__body detail">
+        <div>
+          <span>Monto inicial</span>
+          <strong>{{ moneda(presupuesto()!.montoInicial) }}</strong>
+        </div>
+        <div>
+          <span>Fecha de apertura</span>
+          <strong>{{ presupuesto()!.fechaApertura }}</strong>
+        </div>
+        <div>
+          <span>Observación</span>
+          <strong>{{ presupuesto()!.observacion || '—' }}</strong>
+        </div>
+      </div>
+    </section>
+
+    <!-- ===================== Movimientos ===================== -->
+    <section class="card">
+      <header class="card__head">
+        <h2>Movimientos</h2>
+      </header>
+      <div class="card__body">
+        @if (presupuesto()!.movimientos.length === 0) {
+          <p class="empty">Aún no hay movimientos registrados.</p>
+        } @else {
+          <table class="table">
+            <thead>
+              <tr>
+                <th>Fecha</th>
+                <th>Tipo</th>
+                <th class="num">Valor</th>
+                <th>Observación</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (m of presupuesto()!.movimientos; track m.id) {
+                <tr>
+                  <td>{{ fechaHora(m.fechaMovimiento) }}</td>
+                  <td>
+                    <span class="badge" [class]="badgeMovimiento(m.tipo)">
+                      {{ etiquetaMovimiento(m.tipo) }}
+                    </span>
+                  </td>
+                  <td class="num" [class.num--neg]="m.tipo === 'RETIRO'">
+                    {{ signoMovimiento(m) }} {{ moneda(m.valor) }}
+                  </td>
+                  <td>{{ m.observacion || '—' }}</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        }
+      </div>
+    </section>
+  }
+
+  <!-- ===================== Diálogo ===================== -->
+  <p-dialog
+    [(visible)]="dialogVisible"
+    [modal]="true"
+    [closable]="!guardando()"
+    [draggable]="false"
+    [resizable]="false"
+    [style]="{ width: '440px' }"
+    [header]="tituloDialogo()"
+  >
+    <div class="dialog">
+      <p class="dialog__help">{{ ayudaDialogo() }}</p>
+
+      <label class="field">
+        <span>Monto <em>*</em></span>
+        <input
+          type="number"
+          inputmode="decimal"
+          min="1"
+          [(ngModel)]="monto"
+          placeholder="0"
+        />
+      </label>
+
+      <label class="field">
+        <span>Observación</span>
+        <textarea
+          rows="2"
+          maxlength="500"
+          placeholder="Opcional"
+          [(ngModel)]="observacion"
+        ></textarea>
+      </label>
+    </div>
+    <ng-template pTemplate="footer">
+      <button type="button" class="btn btn--ghost" (click)="cerrarDialogo()" [disabled]="guardando()">
+        Cancelar
+      </button>
+      <button type="button" class="btn btn--primary" (click)="guardar()" [disabled]="guardando()">
+        @if (guardando()) {
+          <i class="pi pi-spin pi-spinner"></i>
+        } @else {
+          <i class="pi pi-check"></i>
+        }
+        Guardar
+      </button>
+    </ng-template>
+  </p-dialog>
+</div>

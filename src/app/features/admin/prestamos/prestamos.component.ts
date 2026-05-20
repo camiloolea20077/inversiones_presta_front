@@ -10,6 +10,7 @@ import { MessageService } from 'primeng/api';
 import { DialogModule } from 'primeng/dialog';
 import { LayoutService } from '../../../core/services/layout.service';
 import { PrestamoService } from '../../../core/services/prestamo.service';
+import { PresupuestoService } from '../../../core/services/presupuesto.service';
 import { ClienteService } from '../../../core/services/cliente.service';
 import { RutaService } from '../../../core/services/ruta.service';
 import { TrabajadorService } from '../../../core/services/trabajador.service';
@@ -38,9 +39,13 @@ export class PrestamosComponent implements OnInit {
   private readonly clienteService = inject(ClienteService);
   private readonly rutaService = inject(RutaService);
   private readonly trabajadorService = inject(TrabajadorService);
+  private readonly presupuestoService = inject(PresupuestoService);
   private readonly fb = inject(FormBuilder);
   private readonly toast = inject(MessageService);
   private readonly layout = inject(LayoutService);
+
+  /** Saldo disponible del presupuesto del administrador (para validar). */
+  readonly saldoDisponible = signal<number | null>(null);
 
   /** ===== Listado ===== */
   readonly rows = signal<PrestamoRow[]>([]);
@@ -192,6 +197,11 @@ export class PrestamosComponent implements OnInit {
     });
     this.simulacion.set(null);
     this.dialogVisible.set(true);
+    // Refresca el saldo del administrador para mostrarlo en el diálogo.
+    this.presupuestoService.obtener().subscribe({
+      next: (p) => this.saldoDisponible.set(p?.saldoDisponible ?? 0),
+      error: () => this.saldoDisponible.set(null),
+    });
     if (this.clientes().length === 0) {
       this.clienteService.listarActivos().subscribe({
         next: (data) => this.clientes.set(data),
@@ -204,6 +214,13 @@ export class PrestamosComponent implements OnInit {
         error: () => {},
       });
     }
+  }
+
+  /** Verifica si el monto solicitado excede el saldo disponible. */
+  excedeSaldo(): boolean {
+    const saldo = this.saldoDisponible();
+    const monto = Number(this.formPrestamo.get('montoPrestado')?.value) || 0;
+    return saldo !== null && monto > 0 && monto > saldo;
   }
 
   private recalcularSimulacion(): void {
